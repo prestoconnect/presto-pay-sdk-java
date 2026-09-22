@@ -1,0 +1,62 @@
+package com.prestouniverse.pay.payments;
+
+import com.prestouniverse.pay.internal.JsonCodec;
+import com.prestouniverse.pay.internal.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class RefundDetail {
+
+    private final String refundRefNum;
+    private final String prestoRefundRefNum;
+    private final RefundStatus refundStatus;
+    private final String refundRequestDate;
+    private final String refundFinalisedDate;
+
+    private RefundDetail(String refundRefNum, String prestoRefundRefNum, RefundStatus refundStatus,
+            String refundRequestDate, String refundFinalisedDate) {
+        this.refundRefNum = refundRefNum;
+        this.prestoRefundRefNum = prestoRefundRefNum;
+        this.refundStatus = refundStatus;
+        this.refundRequestDate = refundRequestDate;
+        this.refundFinalisedDate = refundFinalisedDate;
+    }
+
+    public static List<RefundDetail> parseList(String json) {
+        List<RefundDetail> details = new ArrayList<>();
+        for (JsonObject node : JsonCodec.parseObjectArray(json)) {
+            details.add(fromJson(node));
+        }
+        return details;
+    }
+
+    private static RefundDetail fromJson(JsonObject node) {
+        return new RefundDetail(
+                JsonCodec.requiredText(node, "refundRefNum"),
+                JsonCodec.requiredText(node, "prestoRefundRefNum"),
+                RefundStatus.of(JsonCodec.requiredText(node, "refundStatus")),
+                JsonCodec.requiredText(node, "refundRequestDate"),
+                JsonCodec.text(node, "refundFinalisedDate"));
+    }
+
+    public String refundRefNum() {
+        return refundRefNum;
+    }
+
+    public String prestoRefundRefNum() {
+        return prestoRefundRefNum;
+    }
+
+    public RefundStatus refundStatus() {
+        return refundStatus;
+    }
+
+    public String refundRequestDate() {
+        return refundRequestDate;
+    }
+
+    public String refundFinalisedDate() {
+        return refundFinalisedDate;
+    }
+}

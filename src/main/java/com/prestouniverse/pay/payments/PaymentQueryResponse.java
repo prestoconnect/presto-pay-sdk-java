@@ -1,0 +1,203 @@
+package com.prestouniverse.pay.payments;
+
+import com.prestouniverse.pay.internal.JsonCodec;
+import com.prestouniverse.pay.internal.json.JsonObject;
+
+import java.util.List;
+
+public final class PaymentQueryResponse {
+
+    private final String prestoMrn;
+    private final String paymentRefNum;
+    private final String txnRefNum;
+    private final String userRefNum;
+    private final PaymentStatus paymentStatus;
+    private final int amount;
+    private final String currencyCode;
+    private final String paymentRequestDate;
+    private final String paymentFinalisedDate;
+    private final String reversalRefNum;
+    private final String prestoReversalRefNum;
+    private final ReversalStatus reversalStatus;
+    private final String reversalDate;
+    private final String refundRefNum;
+    private final String prestoRefundRefNum;
+    private final RefundStatus refundStatus;
+    private final String refundRequestDate;
+    private final String refundFinalisedDate;
+    private final String additionalData;
+    private final List<RefundDetail> refundDetails;
+    private final List<PaymentDetail> paymentDetails;
+    private final String ts;
+
+    private PaymentQueryResponse(Builder builder) {
+        this.prestoMrn = builder.prestoMrn;
+        this.paymentRefNum = builder.paymentRefNum;
+        this.txnRefNum = builder.txnRefNum;
+        this.userRefNum = builder.userRefNum;
+        this.paymentStatus = builder.paymentStatus;
+        this.amount = builder.amount;
+        this.currencyCode = builder.currencyCode;
+        this.paymentRequestDate = builder.paymentRequestDate;
+        this.paymentFinalisedDate = builder.paymentFinalisedDate;
+        this.reversalRefNum = builder.reversalRefNum;
+        this.prestoReversalRefNum = builder.prestoReversalRefNum;
+        this.reversalStatus = builder.reversalStatus;
+        this.reversalDate = builder.reversalDate;
+        this.refundRefNum = builder.refundRefNum;
+        this.prestoRefundRefNum = builder.prestoRefundRefNum;
+        this.refundStatus = builder.refundStatus;
+        this.refundRequestDate = builder.refundRequestDate;
+        this.refundFinalisedDate = builder.refundFinalisedDate;
+        this.additionalData = builder.additionalData;
+        this.refundDetails = builder.refundDetails;
+        this.paymentDetails = builder.paymentDetails;
+        this.ts = builder.ts;
+    }
+
+    public static PaymentQueryResponse fromJson(JsonObject node) {
+        Builder builder = new Builder();
+        builder.prestoMrn = JsonCodec.text(node, "prestoMrn");
+        builder.paymentRefNum = JsonCodec.requiredText(node, "paymentRefNum");
+        builder.txnRefNum = JsonCodec.text(node, "txnRefNum");
+        builder.userRefNum = JsonCodec.text(node, "userRefNum");
+        String status = JsonCodec.text(node, "paymentStatus");
+        builder.paymentStatus = status != null ? PaymentStatus.of(status) : null;
+        Integer amount = JsonCodec.optInt(node, "amount");
+        builder.amount = amount != null ? amount : 0;
+        builder.currencyCode = JsonCodec.text(node, "currencyCode");
+        builder.paymentRequestDate = JsonCodec.text(node, "paymentRequestDate");
+        builder.paymentFinalisedDate = JsonCodec.text(node, "paymentFinalisedDate");
+        builder.reversalRefNum = JsonCodec.text(node, "reversalRefNum");
+        builder.prestoReversalRefNum = JsonCodec.text(node, "prestoReversalRefNum");
+        String reversalStatus = JsonCodec.text(node, "reversalStatus");
+        builder.reversalStatus = reversalStatus != null ? ReversalStatus.of(reversalStatus) : null;
+        builder.reversalDate = JsonCodec.text(node, "reversalDate");
+        builder.refundRefNum = JsonCodec.text(node, "refundRefNum");
+        builder.prestoRefundRefNum = JsonCodec.text(node, "prestoRefundRefNum");
+        String refundStatus = JsonCodec.text(node, "refundStatus");
+        builder.refundStatus = refundStatus != null ? RefundStatus.of(refundStatus) : null;
+        builder.refundRequestDate = JsonCodec.text(node, "refundRequestDate");
+        builder.refundFinalisedDate = JsonCodec.text(node, "refundFinalisedDate");
+        builder.additionalData = JsonCodec.text(node, "additionalData");
+        String refundDetailsJson = JsonCodec.text(node, "refundDetails");
+        builder.refundDetails = RefundDetail.parseList(refundDetailsJson != null ? refundDetailsJson : "[]");
+        String paymentDetailsJson = JsonCodec.text(node, "paymentDetails");
+        builder.paymentDetails = PaymentDetail.parseList(paymentDetailsJson != null ? paymentDetailsJson : "[]");
+        builder.ts = JsonCodec.text(node, "ts");
+        return new PaymentQueryResponse(builder);
+    }
+
+    public String prestoMrn() {
+        return prestoMrn;
+    }
+
+    public String paymentRefNum() {
+        return paymentRefNum;
+    }
+
+    public String txnRefNum() {
+        return txnRefNum;
+    }
+
+    public String userRefNum() {
+        return userRefNum;
+    }
+
+    public PaymentStatus paymentStatus() {
+        return paymentStatus;
+    }
+
+    public int amount() {
+        return amount;
+    }
+
+    public String currencyCode() {
+        return currencyCode;
+    }
+
+    public String paymentRequestDate() {
+        return paymentRequestDate;
+    }
+
+    public String paymentFinalisedDate() {
+        return paymentFinalisedDate;
+    }
+
+    public String reversalRefNum() {
+        return reversalRefNum;
+    }
+
+    public String prestoReversalRefNum() {
+        return prestoReversalRefNum;
+    }
+
+    public ReversalStatus reversalStatus() {
+        return reversalStatus;
+    }
+
+    public String reversalDate() {
+        return reversalDate;
+    }
+
+    public String refundRefNum() {
+        return refundRefNum;
+    }
+
+    public String prestoRefundRefNum() {
+        return prestoRefundRefNum;
+    }
+
+    public RefundStatus refundStatus() {
+        return refundStatus;
+    }
+
+    public String refundRequestDate() {
+        return refundRequestDate;
+    }
+
+    public String refundFinalisedDate() {
+        return refundFinalisedDate;
+    }
+
+    public String additionalData() {
+        return additionalData;
+    }
+
+    public List<RefundDetail> refundDetails() {
+        return refundDetails;
+    }
+
+    public List<PaymentDetail> paymentDetails() {
+        return paymentDetails;
+    }
+
+    public String ts() {
+        return ts;
+    }
+
+    private static final class Builder {
+        private String prestoMrn;
+        private String paymentRefNum;
+        private String txnRefNum;
+        private String userRefNum;
+        private PaymentStatus paymentStatus;
+        private int amount;
+        private String currencyCode;
+        private String paymentRequestDate;
+        private String paymentFinalisedDate;
+        private String reversalRefNum;
+        private String prestoReversalRefNum;
+        private ReversalStatus reversalStatus;
+        private String reversalDate;
+        private String refundRefNum;
+        private String prestoRefundRefNum;
+        private RefundStatus refundStatus;
+        private String refundRequestDate;
+        private String refundFinalisedDate;
+        private String additionalData;
+        private List<RefundDetail> refundDetails;
+        private List<PaymentDetail> paymentDetails;
+        private String ts;
+    }
+}

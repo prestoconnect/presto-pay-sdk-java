@@ -1,0 +1,105 @@
+package com.prestouniverse.pay.payments;
+
+import com.prestouniverse.pay.internal.JsonCodec;
+import com.prestouniverse.pay.internal.json.JsonObject;
+
+public final class PaymentRefundParams {
+
+    private final String merchantId;
+    private final String merchantRefNum;
+    private final String paymentRefNum;
+    private final String refundRefNum;
+    private final String remark;
+    private final String notifyUrl;
+    private final Integer amount;
+
+    private PaymentRefundParams(Builder builder) {
+        this.merchantId = builder.merchantId;
+        this.merchantRefNum = builder.merchantRefNum;
+        this.paymentRefNum = builder.paymentRefNum;
+        this.refundRefNum = builder.refundRefNum;
+        this.remark = builder.remark;
+        this.notifyUrl = builder.notifyUrl;
+        this.amount = builder.amount;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public String merchantId() {
+        return merchantId;
+    }
+
+    public String merchantRefNum() {
+        return merchantRefNum;
+    }
+
+    public JsonObject toJson() {
+        JsonObject node = JsonCodec.newObject();
+        node.put("paymentRefNum", paymentRefNum);
+        node.put("refundRefNum", refundRefNum);
+        node.put("remark", remark);
+        JsonCodec.putIfPresent(node, "notifyUrl", notifyUrl);
+        JsonCodec.putIfPresent(node, "amount", amount);
+        return node;
+    }
+
+    public static final class Builder {
+
+        private String merchantId;
+        private String merchantRefNum;
+        private String paymentRefNum;
+        private String refundRefNum;
+        private String remark;
+        private String notifyUrl;
+        private Integer amount;
+
+        private Builder() {
+        }
+
+        public Builder merchantId(String merchantId) {
+            this.merchantId = merchantId;
+            return this;
+        }
+
+        public Builder merchantRefNum(String merchantRefNum) {
+            this.merchantRefNum = merchantRefNum;
+            return this;
+        }
+
+        public Builder paymentRefNum(String paymentRefNum) {
+            this.paymentRefNum = paymentRefNum;
+            return this;
+        }
+
+        public Builder refundRefNum(String refundRefNum) {
+            this.refundRefNum = refundRefNum;
+            return this;
+        }
+
+        public Builder remark(String remark) {
+            this.remark = remark;
+            return this;
+        }
+
+        public Builder notifyUrl(String notifyUrl) {
+            this.notifyUrl = notifyUrl;
+            return this;
+        }
+
+        public Builder amount(int amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public PaymentRefundParams build() {
+            Validation.requireNonNull("paymentRefNum", paymentRefNum);
+            Validation.requireNonNull("refundRefNum", refundRefNum);
+            Validation.requireNonNull("remark", remark);
+            Validation.requireMaxLength("refundRefNum", refundRefNum, 50);
+            Validation.requireMaxLength("remark", remark, 200);
+            return new PaymentRefundParams(this);
+        }
+    }
+}
