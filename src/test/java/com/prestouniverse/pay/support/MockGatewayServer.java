@@ -1,7 +1,7 @@
 package com.prestouniverse.pay.support;
 
-import com.prestouniverse.pay.crypto.Canonicalizer;
 import com.prestouniverse.pay.crypto.RsaSignatureService;
+import com.prestouniverse.pay.internal.Canonicalization;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 import com.sun.net.httpserver.Headers;
@@ -24,6 +24,7 @@ public final class MockGatewayServer implements AutoCloseable {
     private volatile Handler handler;
     private volatile JsonObject lastRequestBody;
     private volatile Map<String, String> lastRequestHeaders;
+    private volatile String lastRequestPath;
 
     private MockGatewayServer(HttpServer server) {
         this.server = server;
@@ -45,6 +46,10 @@ public final class MockGatewayServer implements AutoCloseable {
         this.handler = handler;
     }
 
+    public Handler currentHandler() {
+        return handler;
+    }
+
     public String baseUrl() {
         return "http://127.0.0.1:" + server.getAddress().getPort();
     }
@@ -57,7 +62,12 @@ public final class MockGatewayServer implements AutoCloseable {
         return lastRequestHeaders;
     }
 
+    public String lastRequestPath() {
+        return lastRequestPath;
+    }
+
     private void dispatch(HttpExchange exchange) throws IOException {
+        lastRequestPath = exchange.getRequestURI().getRawPath();
         String rawBody = readAll(exchange.getRequestBody());
         lastRequestBody = JsonCodec.parseObject(rawBody);
         lastRequestHeaders = flatten(exchange.getRequestHeaders());
@@ -118,7 +128,7 @@ public final class MockGatewayServer implements AutoCloseable {
         }
 
         public static Response signed(int status, JsonObject body) {
-            String canonical = Canonicalizer.canonicalize(body);
+            String canonical = Canonicalization.canonicalize(body);
             String signature = RsaSignatureService.sign(canonical, TestKeys.privateKey());
             body.put("signature", signature);
             Map<String, String> headers = new LinkedHashMap<>();
@@ -130,6 +140,18 @@ public final class MockGatewayServer implements AutoCloseable {
             Map<String, String> headers = new LinkedHashMap<>();
             headers.put("Content-Type", "application/json; charset=UTF-8");
             return new Response(status, headers, JsonCodec.write(body));
+        }
+
+        public static Response raw(int status, String body) {
+            Map<String, String> headers = new LinkedHashMap<>();
+            headers.put("Content-Type", "application/json; charset=UTF-8");
+            return new Response(status, headers, body);
+        }
+
+        public static Response redirect(String location) {
+            Map<String, String> headers = new LinkedHashMap<>();
+            headers.put("Location", location);
+            return new Response(302, headers, "");
         }
 
         public static Response systemError(int status, String errorCode, String errorMessage) {

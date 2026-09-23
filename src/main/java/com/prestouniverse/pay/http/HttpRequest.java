@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/** An immutable signed POST request handed to an {@link HttpTransport}. */
 public final class HttpRequest {
 
     private final String url;

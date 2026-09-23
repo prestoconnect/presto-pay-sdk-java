@@ -8,15 +8,15 @@ public final class PaymentRefundResponse {
     private final String prestoMrn;
     private final String paymentRefNum;
     private final String prestoRefundRefNum;
-    private final int amount;
-    private final int refundAmount;
+    private final Integer amount;
+    private final Integer refundAmount;
     private final String currencyCode;
     private final String paymentStatus;
     private final String refundedDate;
     private final String ts;
 
-    private PaymentRefundResponse(String prestoMrn, String paymentRefNum, String prestoRefundRefNum, int amount,
-            int refundAmount, String currencyCode, String paymentStatus, String refundedDate, String ts) {
+    private PaymentRefundResponse(String prestoMrn, String paymentRefNum, String prestoRefundRefNum, Integer amount,
+            Integer refundAmount, String currencyCode, String paymentStatus, String refundedDate, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
         this.prestoRefundRefNum = prestoRefundRefNum;
@@ -29,14 +29,12 @@ public final class PaymentRefundResponse {
     }
 
     static PaymentRefundResponse fromJson(JsonObject node) {
-        Integer amount = JsonCodec.optInt(node, "amount");
-        Integer refundAmount = JsonCodec.optInt(node, "refundAmount");
         return new PaymentRefundResponse(
                 JsonCodec.text(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
                 JsonCodec.text(node, "prestoRefundRefNum"),
-                amount != null ? amount : 0,
-                refundAmount != null ? refundAmount : 0,
+                JsonCodec.optInt(node, "amount"),
+                JsonCodec.optInt(node, "refundAmount"),
                 JsonCodec.text(node, "currencyCode"),
                 JsonCodec.text(node, "paymentStatus"),
                 JsonCodec.text(node, "refundedDate"),
@@ -55,11 +53,13 @@ public final class PaymentRefundResponse {
         return prestoRefundRefNum;
     }
 
-    public int amount() {
+    /** Original payment amount in minor currency units, or {@code null} if the gateway omitted it. */
+    public Integer amount() {
         return amount;
     }
 
-    public int refundAmount() {
+    /** Refunded amount in minor currency units, or {@code null} if the gateway omitted it. */
+    public Integer refundAmount() {
         return refundAmount;
     }
 
@@ -77,5 +77,12 @@ public final class PaymentRefundResponse {
 
     public String ts() {
         return ts;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentRefundResponse{paymentRefNum=" + paymentRefNum + ", prestoRefundRefNum=" + prestoRefundRefNum
+                + ", paymentStatus=" + paymentStatus + ", amount=" + amount + ", refundAmount=" + refundAmount
+                + ", currencyCode=" + currencyCode + '}';
     }
 }

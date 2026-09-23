@@ -7,6 +7,7 @@ import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.payments.TxnType;
 import com.prestouniverse.pay.sample.demo.config.AppProperties;
+import com.prestouniverse.pay.sample.demo.config.PrestoPayProperties;
 import com.prestouniverse.pay.sample.demo.model.checkout.HostedCheckoutForm;
 import com.prestouniverse.pay.sample.demo.model.checkout.SelfHostedCheckoutForm;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore;
@@ -25,12 +26,14 @@ public class WebPayCheckoutService {
     private static final Logger log = LoggerFactory.getLogger(WebPayCheckoutService.class);
 
     private final PrestoPayClient prestoPayClient;
+    private final PrestoPayProperties prestoPayProperties;
     private final AppProperties appProperties;
     private final PaymentActivityStore activityStore;
 
-    public WebPayCheckoutService(PrestoPayClient prestoPayClient, AppProperties appProperties,
-            PaymentActivityStore activityStore) {
+    public WebPayCheckoutService(PrestoPayClient prestoPayClient, PrestoPayProperties prestoPayProperties,
+            AppProperties appProperties, PaymentActivityStore activityStore) {
         this.prestoPayClient = prestoPayClient;
+        this.prestoPayProperties = prestoPayProperties;
         this.appProperties = appProperties;
         this.activityStore = activityStore;
     }
@@ -74,8 +77,10 @@ public class WebPayCheckoutService {
 
     public PaymentQueryResponse query(String txnRefNum) {
         log.info("Querying payment txnRefNum={}", txnRefNum);
-        PaymentQueryResponse response = prestoPayClient.payments().query(
-                PaymentQueryRequest.builder().txnRefNum(txnRefNum).build());
+        PaymentQueryResponse response = prestoPayClient.payments().query(PaymentQueryRequest.builder()
+                .merchantRefNum(prestoPayProperties.getMrn())
+                .txnRefNum(txnRefNum)
+                .build());
         log.info("Query completed txnRefNum={} paymentRefNum={} paymentStatus={} amount={} {}",
                 response.txnRefNum(),
                 response.paymentRefNum(),
@@ -88,6 +93,7 @@ public class WebPayCheckoutService {
     private PaymentInitRequest.Builder buildWebPayInitRequest(String displayDesc, int amountMinorUnits,
             String txnRefNum) {
         return PaymentInitRequest.builder()
+                .merchantRefNum(prestoPayProperties.getMrn())
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum(txnRefNum)
                 .displayDesc(displayDesc)

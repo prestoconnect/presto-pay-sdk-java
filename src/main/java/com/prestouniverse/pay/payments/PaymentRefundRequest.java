@@ -5,7 +5,6 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 
 public final class PaymentRefundRequest {
 
-    private final String merchantId;
     private final String merchantRefNum;
     private final String paymentRefNum;
     private final String refundRefNum;
@@ -14,7 +13,6 @@ public final class PaymentRefundRequest {
     private final Integer amount;
 
     private PaymentRefundRequest(Builder builder) {
-        this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.paymentRefNum = builder.paymentRefNum;
         this.refundRefNum = builder.refundRefNum;
@@ -25,10 +23,6 @@ public final class PaymentRefundRequest {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public String merchantId() {
-        return merchantId;
     }
 
     public String merchantRefNum() {
@@ -47,7 +41,6 @@ public final class PaymentRefundRequest {
 
     public static final class Builder {
 
-        private String merchantId;
         private String merchantRefNum;
         private String paymentRefNum;
         private String refundRefNum;
@@ -56,11 +49,6 @@ public final class PaymentRefundRequest {
         private Integer amount;
 
         private Builder() {
-        }
-
-        public Builder merchantId(String merchantId) {
-            this.merchantId = merchantId;
-            return this;
         }
 
         public Builder merchantRefNum(String merchantRefNum) {
@@ -94,11 +82,14 @@ public final class PaymentRefundRequest {
         }
 
         public PaymentRefundRequest build() {
+            Validation.requireNonBlank("merchantRefNum", merchantRefNum);
             Validation.requireNonNull("paymentRefNum", paymentRefNum);
             Validation.requireNonNull("refundRefNum", refundRefNum);
             Validation.requireNonNull("remark", remark);
             Validation.requireMaxLength("refundRefNum", refundRefNum, 50);
             Validation.requireMaxLength("remark", remark, 200);
+            Validation.requireMaxLength("notifyUrl", notifyUrl, 255);
+            Validation.requirePositive("amount", amount);
             return new PaymentRefundRequest(this);
         }
     }

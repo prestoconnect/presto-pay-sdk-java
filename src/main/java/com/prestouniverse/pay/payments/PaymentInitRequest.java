@@ -9,11 +9,11 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public final class PaymentInitRequest {
 
-    private final String merchantId;
     private final String merchantRefNum;
     private final String qrValue;
     private final String payerRefNum;
@@ -39,7 +39,6 @@ public final class PaymentInitRequest {
     private final String receiptName;
 
     private PaymentInitRequest(Builder builder) {
-        this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.qrValue = builder.qrValue;
         this.payerRefNum = builder.payerRefNum;
@@ -48,7 +47,7 @@ public final class PaymentInitRequest {
         this.txnType = builder.txnType;
         this.txnRefNum = builder.txnRefNum;
         this.displayDesc = builder.displayDesc;
-        this.items = builder.items;
+        this.items = Collections.unmodifiableList(new ArrayList<>(builder.items));
         this.transactionalData = builder.transactionalData;
         this.amount = builder.amount;
         this.currencyCode = builder.currencyCode;
@@ -58,7 +57,7 @@ public final class PaymentInitRequest {
         this.additionalData = builder.additionalData;
         this.mode = builder.mode;
         this.modeData = builder.modeData;
-        this.allowedPaymentMethods = builder.allowedPaymentMethods;
+        this.allowedPaymentMethods = Collections.unmodifiableList(new ArrayList<>(builder.allowedPaymentMethods));
         this.bindData = builder.bindData;
         this.themeRefNum = builder.themeRefNum;
         this.receiptEmail = builder.receiptEmail;
@@ -67,10 +66,6 @@ public final class PaymentInitRequest {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public String merchantId() {
-        return merchantId;
     }
 
     public String merchantRefNum() {
@@ -120,7 +115,6 @@ public final class PaymentInitRequest {
 
     public static final class Builder {
 
-        private String merchantId;
         private String merchantRefNum;
         private String qrValue;
         private String payerRefNum;
@@ -146,11 +140,6 @@ public final class PaymentInitRequest {
         private String receiptName;
 
         private Builder() {
-        }
-
-        public Builder merchantId(String merchantId) {
-            this.merchantId = merchantId;
-            return this;
         }
 
         public Builder merchantRefNum(String merchantRefNum) {
@@ -194,7 +183,11 @@ public final class PaymentInitRequest {
         }
 
         public Builder items(LineItem... items) {
-            this.items = new ArrayList<>(Arrays.asList(items));
+            return items(items == null ? null : Arrays.asList(items));
+        }
+
+        public Builder items(List<LineItem> items) {
+            this.items = Validation.copyOf(items);
             return this;
         }
 
@@ -244,10 +237,11 @@ public final class PaymentInitRequest {
         }
 
         public Builder allowedPaymentMethods(String... methods) {
-            this.allowedPaymentMethods = new ArrayList<>();
-            if (methods != null) {
-                this.allowedPaymentMethods.addAll(Arrays.asList(methods));
-            }
+            return allowedPaymentMethods(methods == null ? null : Arrays.asList(methods));
+        }
+
+        public Builder allowedPaymentMethods(List<String> methods) {
+            this.allowedPaymentMethods = Validation.copyOf(methods);
             return this;
         }
 
@@ -272,6 +266,7 @@ public final class PaymentInitRequest {
         }
 
         public PaymentInitRequest build() {
+            Validation.requireNonBlank("merchantRefNum", merchantRefNum);
             Validation.requireNonNull("txnType", txnType);
             Validation.requireNonNull("txnRefNum", txnRefNum);
             Validation.requireNonNull("displayDesc", displayDesc);
@@ -286,6 +281,9 @@ public final class PaymentInitRequest {
             Validation.requireMaxLength("modeData", modeData, 1000);
             Validation.requireMaxLength("receiptEmail", receiptEmail, 320);
             Validation.requireMaxLength("receiptName", receiptName, 200);
+            Validation.requirePositive("amount", amount);
+            Validation.requireNoNullElements("items", items);
+            Validation.requireNoNullElements("allowedPaymentMethods", allowedPaymentMethods);
 
             if (qrValue != null && payerRefNum != null) {
                 throw new PrestoPayConfigException("qrValue",

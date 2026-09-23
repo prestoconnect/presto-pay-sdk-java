@@ -1,6 +1,7 @@
 package com.prestouniverse.pay.sample.demo.controller;
 
 import com.prestouniverse.pay.PrestoPayClient;
+import com.prestouniverse.pay.exception.PrestoPayResponseException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.webhooks.NotifyAck;
 import com.prestouniverse.pay.webhooks.NotifyEvent;
@@ -39,12 +40,15 @@ public class WebhookController {
             log.warn("Webhook rejected: signature verification failed side={} message={} canonical={}",
                     ex.side(), ex.getMessage(), ex.canonicalString());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (PrestoPayResponseException ex) {
+            log.warn("Webhook rejected: malformed body message={}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         log.info("Webhook verified eventCode={} paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
                         + "amount={} {} eventRefNum={}",
                 event.eventCode(),
-                event.getPaymentStatus(),
+                event.paymentStatus(),
                 event.txnRefNum(),
                 event.paymentRefNum(),
                 event.success(),
@@ -55,7 +59,7 @@ public class WebhookController {
         activityStore.appendWebhook(new WebhookRecord(
                 event.txnRefNum(),
                 event.eventCode(),
-                event.getPaymentStatus(),
+                event.paymentStatus(),
                 event.success(),
                 event.amount(),
                 event.currencyCode(),

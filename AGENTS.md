@@ -16,7 +16,7 @@ Gateway behavior and wire formats are defined by the implemented client, [README
 | Live staging smoke (credentials required) | `PRESTOPAY_STAGING_SMOKE=1` + env vars, then `mvn verify -Pstaging-smoke` |
 | Attach sources/Javadoc jars | `mvn verify -Prelease` |
 
-CI (`.github/workflows/ci.yml`) runs `mvn verify` on JDK 8.
+CI (`.github/workflows/ci.yml`) runs `mvn verify` on JDK 8 (Checkstyle skipped: Checkstyle 10 needs Java 11+), 11, 17, and 21. `maven.compiler.release=8` is set only by the `jdk9-plus` profile because JDK 8 `javac` has no `--release`.
 
 ## Layout
 
@@ -50,7 +50,8 @@ Rules:
 
 - Do **not** expose `internal` types on public method signatures or Javadoc examples meant for integrators.
 - Request/response **wire serialization** (`toJson` / `fromJson`) is **package-private** on payment types — only `PaymentsClient` and tests in the same package should call them.
-- **`Canonicalizer.canonicalizeJson(String)`** is the supported public helper for signature debugging.
+- **`Canonicalizer.canonicalizeJson(String)`** is the supported public helper for signature debugging; the `JsonObject` form lives in `internal.Canonicalization`.
+- When another package needs a package-private factory (e.g. `PaymentsClient` construction), route it through `internal.SdkAccess` instead of adding a public constructor or method.
 
 Sub-clients:
 
@@ -68,6 +69,8 @@ Paths (always under configured base URL):
 
 Pipeline implementation: `internal.RequestPipeline` (injects `mid`, `prestoMrn`, timestamp, signature, verifies response signature).
 
+Merchant identity: one `mid` per client. `PrestoPayClient.Builder.merchantId` (and `WebhookVerifier.Builder.merchantId`) is required; the pipeline sends it on every request and webhooks for other `mid`s are rejected. `prestoMrn` stays per request (`*Request.merchantRefNum`, required) because one `mid` can have several. Multi-merchant integrators build one client per `mid`; do not reintroduce per-request `mid` or lists of allowed `mid`s.
+
 ## Type and naming conventions
 
 Follow existing patterns in `payments/` and `webhooks/`:
@@ -76,7 +79,7 @@ Follow existing patterns in `payments/` and `webhooks/`:
 2. **Gateway code lists** use **`public static final String`** holder classes (no Java `enum` for open-ended gateway strings):
    - `PaymentStatus`, `RefundStatus`, `ReversalStatus`, `PaymentMethod`, `TxnType`, `ErrorCode`
    - Response getters return **`String`** for those wire values; integrators compare to constants or handle unknown gateway values as strings.
-3. **`NotifyEventCode`** is a **`String` constant holder** (same pattern as `PaymentStatus`). Use `NotifyEvent.getPaymentStatus()` after parse; `payments().query()` remains authoritative.
+3. **`NotifyEventCode`** is a **`String` constant holder** (same pattern as `PaymentStatus`). Use `NotifyEvent.paymentStatus()` after parse; `payments().query()` remains authoritative.
 4. **Validation** lives in `payments.Validation` and request `build()` methods; throw `PrestoPayConfigException` for client-side validation failures.
 5. **Errors:** unchecked `PrestoPayException` subclasses — see README error table.
 

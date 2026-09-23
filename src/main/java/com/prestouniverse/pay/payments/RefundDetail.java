@@ -23,7 +23,7 @@ public final class RefundDetail {
         this.refundFinalisedDate = refundFinalisedDate;
     }
 
-    public static List<RefundDetail> parseList(String json) {
+    static List<RefundDetail> parseList(String json) {
         List<RefundDetail> details = new ArrayList<>();
         for (JsonObject node : JsonCodec.parseObjectArray(json)) {
             details.add(fromJson(node));
@@ -58,5 +58,11 @@ public final class RefundDetail {
 
     public String refundFinalisedDate() {
         return refundFinalisedDate;
+    }
+
+    @Override
+    public String toString() {
+        return "RefundDetail{refundRefNum=" + refundRefNum + ", prestoRefundRefNum=" + prestoRefundRefNum
+                + ", refundStatus=" + refundStatus + '}';
     }
 }

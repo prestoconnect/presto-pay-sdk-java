@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+/** An immutable HTTP response returned by an {@link HttpTransport}. Header lookup is case-insensitive. */
 public final class HttpResponse {
 
     private final int status;

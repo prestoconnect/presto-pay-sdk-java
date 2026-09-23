@@ -16,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Live calls against {@link Environment#STAGING}. Not run by default.
  *
- * <p>Set {@code PRESTOPAY_STAGING_SMOKE=1} plus the same variables as {@link PrestoPayClient#fromEnv()},
- * then run {@code mvn verify -Pstaging-smoke}.
+ * <p>Set {@code PRESTOPAY_STAGING_SMOKE=1} plus the same variables as {@link PrestoPayClient#fromEnv()} and
+ * the test-only {@code PRESTOPAY_MRN}, then run {@code mvn verify -Pstaging-smoke}.
  */
 @Tag("staging")
 @EnabledIfEnvironmentVariable(named = "PRESTOPAY_STAGING_SMOKE", matches = "1")
@@ -26,9 +26,11 @@ class StagingSmokeTest {
     @Test
     void initThenQueryByTxnRefNum() {
         PrestoPayClient client = PrestoPayClient.fromEnv();
+        String mrn = System.getenv("PRESTOPAY_MRN");
         String txnRefNum = "sdk-smoke-" + System.currentTimeMillis();
 
         PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
+                .merchantRefNum(mrn)
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum(txnRefNum)
                 .displayDesc("SDK staging smoke")
@@ -41,8 +43,10 @@ class StagingSmokeTest {
         assertNotNull(init.paymentUrl());
         assertFalse(init.paymentUrl().isEmpty());
 
-        PaymentQueryResponse query = client.payments().query(
-                PaymentQueryRequest.builder().txnRefNum(txnRefNum).build());
+        PaymentQueryResponse query = client.payments().query(PaymentQueryRequest.builder()
+                .merchantRefNum(mrn)
+                .txnRefNum(txnRefNum)
+                .build());
         assertNotNull(query.txnRefNum());
     }
 }

@@ -6,7 +6,6 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 
 public final class PaymentReverseRequest {
 
-    private final String merchantId;
     private final String merchantRefNum;
     private final String paymentRefNum;
     private final String txnRefNum;
@@ -15,7 +14,6 @@ public final class PaymentReverseRequest {
     private final String notifyUrl;
 
     private PaymentReverseRequest(Builder builder) {
-        this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.paymentRefNum = builder.paymentRefNum;
         this.txnRefNum = builder.txnRefNum;
@@ -26,10 +24,6 @@ public final class PaymentReverseRequest {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public String merchantId() {
-        return merchantId;
     }
 
     public String merchantRefNum() {
@@ -48,7 +42,6 @@ public final class PaymentReverseRequest {
 
     public static final class Builder {
 
-        private String merchantId;
         private String merchantRefNum;
         private String paymentRefNum;
         private String txnRefNum;
@@ -57,11 +50,6 @@ public final class PaymentReverseRequest {
         private String notifyUrl;
 
         private Builder() {
-        }
-
-        public Builder merchantId(String merchantId) {
-            this.merchantId = merchantId;
-            return this;
         }
 
         public Builder merchantRefNum(String merchantRefNum) {
@@ -95,6 +83,7 @@ public final class PaymentReverseRequest {
         }
 
         public PaymentReverseRequest build() {
+            Validation.requireNonBlank("merchantRefNum", merchantRefNum);
             Validation.requireNonNull("reversalRefNum", reversalRefNum);
             Validation.requireMaxLength("reversalRefNum", reversalRefNum, 50);
             Validation.requireMaxLength("remark", remark, 200);

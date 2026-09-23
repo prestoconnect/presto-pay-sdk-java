@@ -103,9 +103,9 @@ public final class JsonCodec {
             return (Integer) value;
         }
         if (value instanceof Long) {
-            return ((Long) value).intValue();
+            throw new IllegalArgumentException("Field '" + field + "' is out of int range: " + value);
         }
-        throw new IllegalArgumentException("Field '" + field + "' is not a number");
+        throw new IllegalArgumentException("Field '" + field + "' is not an integer");
     }
 
     public static int requiredInt(JsonObject node, String field) {

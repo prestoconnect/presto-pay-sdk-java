@@ -2,8 +2,12 @@ package com.prestouniverse.pay.internal.json;
 
 final class JsonParser {
 
+    /** Gateway bodies are flat; the limit prevents stack exhaustion from untrusted webhook input. */
+    static final int MAX_DEPTH = 32;
+
     private final String text;
     private int pos;
+    private int depth;
 
     private JsonParser(String text) {
         this.text = text;
@@ -24,9 +28,15 @@ final class JsonParser {
         char c = peek();
         switch (c) {
             case '{':
-                return parseObject();
+                enterNested();
+                JsonObject object = parseObject();
+                depth--;
+                return object;
             case '[':
-                return parseArray();
+                enterNested();
+                JsonArray array = parseArray();
+                depth--;
+                return array;
             case '"':
                 return parseString();
             case 't':
@@ -40,6 +50,12 @@ final class JsonParser {
                     return parseNumber();
                 }
                 throw new IllegalArgumentException("Unexpected character '" + c + "' at position " + pos);
+        }
+    }
+
+    private void enterNested() {
+        if (++depth > MAX_DEPTH) {
+            throw new IllegalArgumentException("JSON nesting exceeds " + MAX_DEPTH + " levels at position " + pos);
         }
     }
 

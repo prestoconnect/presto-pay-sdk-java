@@ -28,6 +28,7 @@ public final class JdkHttpTransport implements HttpTransport {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(false);
             connection.setConnectTimeout((int) connectTimeout.toMillis());
             connection.setReadTimeout((int) readTimeout.toMillis());
             for (Map.Entry<String, String> header : request.headers().entrySet()) {
@@ -35,10 +36,13 @@ public final class JdkHttpTransport implements HttpTransport {
             }
 
             byte[] bodyBytes = request.body().getBytes(StandardCharsets.UTF_8);
+            // Streaming mode disables HttpURLConnection's silent POST resend on stale keep-alive connections.
+            connection.setFixedLengthStreamingMode(bodyBytes.length);
+            connection.connect();
+            requestSent = true;
             try (OutputStream out = connection.getOutputStream()) {
                 out.write(bodyBytes);
             }
-            requestSent = true;
 
             int status = connection.getResponseCode();
             InputStream stream = status >= 400 ? connection.getErrorStream() : connection.getInputStream();

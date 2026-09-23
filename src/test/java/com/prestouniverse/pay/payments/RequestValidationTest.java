@@ -1,16 +1,52 @@
 package com.prestouniverse.pay.payments;
 
 import com.prestouniverse.pay.exception.PrestoPayConfigException;
+import com.prestouniverse.pay.internal.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RequestValidationTest {
 
+    private static final String MRN = "PM240110XDSFC";
+
+    @Test
+    void everyRequestRequiresMerchantRefNum() {
+        assertRejects("merchantRefNum", () -> PaymentInitRequest.builder()
+                .txnType(TxnType.QR_PAY)
+                .txnRefNum("TXN1")
+                .displayDesc("desc")
+                .build());
+        assertRejects("merchantRefNum", () -> PaymentQueryRequest.builder()
+                .paymentRefNum("PP1")
+                .build());
+        assertRejects("merchantRefNum", () -> PaymentReverseRequest.builder()
+                .paymentRefNum("PP1")
+                .reversalRefNum("REV1")
+                .build());
+        assertRejects("merchantRefNum", () -> PaymentRefundRequest.builder()
+                .paymentRefNum("PP1")
+                .refundRefNum("RFD1")
+                .remark("remark")
+                .build());
+    }
+
+    @Test
+    void blankMerchantRefNumIsRejected() {
+        assertRejects("merchantRefNum", () -> query().merchantRefNum("").paymentRefNum("PP1").build());
+    }
+
     @Test
     void initRequiresTxnType() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
+        assertRejects("txnType", () -> init()
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .build());
@@ -18,7 +54,7 @@ class RequestValidationTest {
 
     @Test
     void initRejectsQrValueAndPayerRefNumTogether() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
+        assertRejects("qrValue", () -> init()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -29,7 +65,7 @@ class RequestValidationTest {
 
     @Test
     void initRequiresCurrencyCodeWhenAmountIsSet() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
+        assertRejects("currencyCode", () -> init()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -39,7 +75,7 @@ class RequestValidationTest {
 
     @Test
     void webPayRequiresRedirectUrl() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
+        assertRejects("redirectUrl", () -> init()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -49,7 +85,7 @@ class RequestValidationTest {
     @Test
     void initRejectsTxnRefNumOverMaxLength() {
         String tooLong = repeat("a", 51);
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
+        assertRejects("txnRefNum", () -> init()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum(tooLong)
                 .displayDesc("desc")
@@ -57,23 +93,85 @@ class RequestValidationTest {
     }
 
     @Test
+    void initRejectsNonPositiveAmount() {
+        assertRejects("amount", () -> qrInit().amount(0).currencyCode("MYR").build());
+        assertRejects("amount", () -> qrInit().amount(-100).currencyCode("MYR").build());
+    }
+
+    @Test
+    void initRejectsNullListElements() {
+        LineItem item = LineItem.builder().itemDesc("Coffee").quantity(1).unitAmount(100).totalAmount(100).build();
+        assertRejects("items", () -> qrInit().items(item, null).build());
+        assertRejects("allowedPaymentMethods", () -> qrInit()
+                .allowedPaymentMethods(Arrays.asList(PaymentMethod.CARD, null))
+                .build());
+    }
+
+    @Test
+    void initListSettersTreatNullAsEmptyAndCopyTheInput() {
+        List<String> methods = new ArrayList<>(Arrays.asList(PaymentMethod.CARD));
+        PaymentInitRequest request = qrInit()
+                .items((LineItem[]) null)
+                .allowedPaymentMethods(methods)
+                .build();
+        methods.add(PaymentMethod.WALLET);
+
+        JsonObject json = request.toJson();
+        assertFalse(json.has("itemList"));
+        assertEquals("[\"" + PaymentMethod.CARD + "\"]", json.get("allowedPaymentMethods"));
+    }
+
+    @Test
+    void refundRejectsNonPositiveAmountAndLongNotifyUrl() {
+        assertRejects("amount", () -> refund().amount(0).build());
+        assertRejects("notifyUrl", () -> refund().notifyUrl("https://x/" + repeat("a", 250)).build());
+    }
+
+    @Test
     void queryRequiresEitherRefNum() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentQueryRequest.builder().build());
+        assertRejects("paymentRefNum", () -> query().build());
     }
 
     @Test
     void reverseRequiresReversalRefNum() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentReverseRequest.builder()
+        assertRejects("reversalRefNum", () -> PaymentReverseRequest.builder()
+                .merchantRefNum(MRN)
                 .paymentRefNum("PP1")
                 .build());
     }
 
     @Test
     void refundRequiresRemark() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentRefundRequest.builder()
+        assertRejects("remark", () -> PaymentRefundRequest.builder()
+                .merchantRefNum(MRN)
                 .paymentRefNum("PP1")
                 .refundRefNum("RFD1")
                 .build());
+    }
+
+    private static PaymentInitRequest.Builder init() {
+        return PaymentInitRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static PaymentInitRequest.Builder qrInit() {
+        return init().txnType(TxnType.QR_PAY).txnRefNum("TXN1").displayDesc("desc");
+    }
+
+    private static PaymentRefundRequest.Builder refund() {
+        return PaymentRefundRequest.builder()
+                .merchantRefNum(MRN)
+                .paymentRefNum("PP1")
+                .refundRefNum("RFD1")
+                .remark("remark");
+    }
+
+    private static PaymentQueryRequest.Builder query() {
+        return PaymentQueryRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static void assertRejects(String field, Executable build) {
+        PrestoPayConfigException exception = assertThrows(PrestoPayConfigException.class, build);
+        assertEquals(field, exception.field());
     }
 
     private static String repeat(String s, int times) {

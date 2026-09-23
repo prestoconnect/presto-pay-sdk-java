@@ -24,6 +24,19 @@
     </license>
   </licenses>
 
+  <organization>
+    <name>Presto Universe</name>
+    <url>https://github.com/prestouniverse</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>Presto Universe</name>
+      <organization>Presto Universe</organization>
+      <organizationUrl>https://github.com/prestouniverse</organizationUrl>
+    </developer>
+  </developers>
+
   <scm>
     <url>https://github.com/prestouniverse/presto-pay-sdk</url>
     <connection>scm:git:https://github.com/prestouniverse/presto-pay-sdk.git</connection>
@@ -32,7 +45,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>8</maven.compiler.release>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
 
     <junit.version>5.10.2</junit.version>
 
@@ -139,6 +153,16 @@
 
   <profiles>
     <profile>
+      <id>jdk9-plus</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <maven.compiler.release>8</maven.compiler.release>
+      </properties>
+    </profile>
+
+    <profile>
       <id>staging-smoke</id>
       <build>
         <plugins>
@@ -175,6 +199,9 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <version>${maven-javadoc-plugin.version}</version>
+            <configuration>
+              <excludePackageNames>com.prestouniverse.pay.internal:com.prestouniverse.pay.internal.*</excludePackageNames>
+            </configuration>
             <executions>
               <execution>
                 <id>attach-javadocs</id>

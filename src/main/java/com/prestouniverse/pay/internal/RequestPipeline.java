@@ -2,10 +2,11 @@ package com.prestouniverse.pay.internal;
 
 import com.prestouniverse.pay.RetryPolicy;
 import com.prestouniverse.pay.SdkVersion;
-import com.prestouniverse.pay.crypto.Canonicalizer;
 import com.prestouniverse.pay.crypto.RsaSignatureService;
 import com.prestouniverse.pay.exception.PrestoPayApiException;
 import com.prestouniverse.pay.exception.PrestoPayConfigException;
+import com.prestouniverse.pay.exception.PrestoPayResponseException;
+import com.prestouniverse.pay.exception.PrestoPayResponseException.Source;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException.Side;
 import com.prestouniverse.pay.exception.PrestoPayTransportException;
@@ -27,8 +28,7 @@ public final class RequestPipeline {
             "presto-pay-sdk/" + SdkVersion.version() + " java/" + System.getProperty("java.version", "unknown");
 
     private final String baseUrl;
-    private final String defaultMerchantId;
-    private final String defaultMerchantRefNum;
+    private final String merchantId;
     private final PrivateKey privateKey;
     private final PublicKey prestoPublicKey;
     private final HttpTransport transport;
@@ -37,12 +37,11 @@ public final class RequestPipeline {
     private final RetryPolicy retryPolicy;
     private final Clock clock;
 
-    public RequestPipeline(String baseUrl, String defaultMerchantId, String defaultMerchantRefNum,
-            PrivateKey privateKey, PublicKey prestoPublicKey, HttpTransport transport, Duration connectTimeout,
-            Duration readTimeout, RetryPolicy retryPolicy, Clock clock) {
+    public RequestPipeline(String baseUrl, String merchantId, PrivateKey privateKey, PublicKey prestoPublicKey,
+            HttpTransport transport, Duration connectTimeout, Duration readTimeout, RetryPolicy retryPolicy,
+            Clock clock) {
         this.baseUrl = baseUrl;
-        this.defaultMerchantId = defaultMerchantId;
-        this.defaultMerchantRefNum = defaultMerchantRefNum;
+        this.merchantId = requireText("mid", merchantId);
         this.privateKey = privateKey;
         this.prestoPublicKey = prestoPublicKey;
         this.transport = transport;
@@ -52,10 +51,9 @@ public final class RequestPipeline {
         this.clock = clock;
     }
 
-    public JsonObject execute(String path, JsonObject body, String merchantIdOverride,
-            String merchantRefNumOverride, boolean idempotent) {
-        body.put("mid", resolve("mid", merchantIdOverride, defaultMerchantId));
-        body.put("prestoMrn", resolve("prestoMrn", merchantRefNumOverride, defaultMerchantRefNum));
+    public JsonObject execute(String path, JsonObject body, String merchantRefNum, boolean idempotent) {
+        body.put("mid", merchantId);
+        body.put("prestoMrn", requireText("prestoMrn", merchantRefNum));
 
         int attempt = 0;
         while (true) {
@@ -91,7 +89,7 @@ public final class RequestPipeline {
 
         String canonical;
         try {
-            canonical = Canonicalizer.canonicalize(requestBody);
+            canonical = Canonicalization.canonicalize(requestBody);
         } catch (IllegalArgumentException e) {
             throw new PrestoPaySignatureException(Side.REQUEST, "Failed to canonicalize request body", null, e);
         }
@@ -114,20 +112,34 @@ public final class RequestPipeline {
         try {
             node = JsonCodec.parseObject(response.body());
         } catch (IllegalArgumentException e) {
-            throw new PrestoPaySignatureException(Side.RESPONSE, "Malformed response body", null, e);
+            throw new PrestoPayResponseException(Source.RESPONSE, "Malformed response body: " + e.getMessage(),
+                    response.body(), e);
         }
 
         String signature = JsonCodec.text(node, "signature");
         if (signature == null) {
             throw new PrestoPaySignatureException(Side.RESPONSE, "Response is missing a signature field", null);
         }
-        String canonical = Canonicalizer.canonicalize(node);
+        String canonical;
+        try {
+            canonical = Canonicalization.canonicalize(node);
+        } catch (IllegalArgumentException e) {
+            throw new PrestoPayResponseException(Source.RESPONSE,
+                    "Failed to canonicalize response body: " + e.getMessage(), response.body(), e);
+        }
         if (!RsaSignatureService.verify(canonical, signature, prestoPublicKey)) {
             throw new PrestoPaySignatureException(Side.RESPONSE, "Response signature verification failed",
                     canonical);
         }
 
-        if (!JsonCodec.optBoolean(node, "success", true)) {
+        boolean success;
+        try {
+            success = JsonCodec.optBoolean(node, "success", true);
+        } catch (IllegalArgumentException e) {
+            throw new PrestoPayResponseException(Source.RESPONSE, "Invalid response body: " + e.getMessage(),
+                    response.body(), e);
+        }
+        if (!success) {
             String errorCode = JsonCodec.text(node, "errorCode");
             String errorMessage = JsonCodec.text(node, "errorMessage");
             throw new PrestoPayApiException(response.status(), errorCode, errorMessage, false, response.body());
@@ -135,15 +147,11 @@ public final class RequestPipeline {
         return node;
     }
 
-    private String resolve(String field, String override, String defaultValue) {
-        if (override != null) {
-            return override;
+    private static String requireText(String field, String value) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new PrestoPayConfigException(field, field + " is required");
         }
-        if (defaultValue != null) {
-            return defaultValue;
-        }
-        throw new PrestoPayConfigException(field,
-                field + " is required: set it on the client builder or on this request");
+        return value;
     }
 
     private Map<String, String> headers() {

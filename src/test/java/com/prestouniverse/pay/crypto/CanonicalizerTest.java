@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.crypto;
 
+import com.prestouniverse.pay.internal.Canonicalization;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
 import org.junit.jupiter.api.Test;
@@ -26,14 +27,14 @@ class CanonicalizerTest {
         String expected = "1200:MYR:Order #12345:PW2401XH9KCX:https://merchant.example.com/webhook/notify:"
                 + "PM240110XDSFC:https://merchant.example.com/redirect/TXN10001:20250423104500.000:TXN10001:WebPay";
 
-        assertEquals(expected, Canonicalizer.canonicalize(body));
+        assertEquals(expected, Canonicalization.canonicalize(body));
     }
 
     @Test
     void canonicalizeJsonMatchesObjectCanonicalize() {
         String json = "{\"mid\":\"PW2401XH9KCX\",\"amount\":1200,\"ts\":\"20250423104500.000\"}";
         JsonObject body = JsonObject.parse(json);
-        assertEquals(Canonicalizer.canonicalize(body), Canonicalizer.canonicalizeJson(json));
+        assertEquals(Canonicalization.canonicalize(body), Canonicalizer.canonicalizeJson(json));
     }
 
     @Test
@@ -45,7 +46,7 @@ class CanonicalizerTest {
         body.put("errorMessage", "Invalid input.");
         body.put("signature", "B7De0lL7Nh3SfNPE0+xK6Yu4Rk7nd3dqQ5EpvGpSLw4...");
 
-        assertEquals("1201:Invalid input.:false:20260922135741.041", Canonicalizer.canonicalize(body));
+        assertEquals("1201:Invalid input.:false:20260922135741.041", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -55,7 +56,7 @@ class CanonicalizerTest {
         body.putNull("b");
         body.put("c", "y");
 
-        assertEquals("x::y", Canonicalizer.canonicalize(body));
+        assertEquals("x::y", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -69,8 +70,8 @@ class CanonicalizerTest {
         withoutField.put("a", "x");
         withoutField.put("c", "y");
 
-        assertEquals("x::y", Canonicalizer.canonicalize(withField));
-        assertEquals("x:y", Canonicalizer.canonicalize(withoutField));
+        assertEquals("x::y", Canonicalization.canonicalize(withField));
+        assertEquals("x:y", Canonicalization.canonicalize(withoutField));
     }
 
     @Test
@@ -79,7 +80,7 @@ class CanonicalizerTest {
         body.put("additionalData", "");
         body.put("mid", "PW2401XH9KCX");
 
-        assertEquals(":PW2401XH9KCX", Canonicalizer.canonicalize(body));
+        assertEquals(":PW2401XH9KCX", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -88,7 +89,7 @@ class CanonicalizerTest {
         body.putArray("allowedPaymentMethods").add("Wallet").add("Card");
         body.put("mid", "PW2401XH9KCX");
 
-        assertEquals("[\"Wallet\",\"Card\"]:PW2401XH9KCX", Canonicalizer.canonicalize(body));
+        assertEquals("[\"Wallet\",\"Card\"]:PW2401XH9KCX", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -101,7 +102,7 @@ class CanonicalizerTest {
         asString.put("allowedPaymentMethods", "[\"Wallet\",\"Card\"]");
         asString.put("mid", "PW2401XH9KCX");
 
-        assertEquals(Canonicalizer.canonicalize(asArray), Canonicalizer.canonicalize(asString));
+        assertEquals(Canonicalization.canonicalize(asArray), Canonicalization.canonicalize(asString));
     }
 
     @Test
@@ -110,7 +111,7 @@ class CanonicalizerTest {
         body.put("paymentDetails", "[{\"method\":\"Wallet\",\"amount\":5000}]");
         body.put("mid", "PW2401XH9KCX");
 
-        assertEquals("PW2401XH9KCX:[{\"method\":\"Wallet\",\"amount\":5000}]", Canonicalizer.canonicalize(body));
+        assertEquals("PW2401XH9KCX:[{\"method\":\"Wallet\",\"amount\":5000}]", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -119,7 +120,7 @@ class CanonicalizerTest {
         body.put("mid", "PW2401XH9KCX");
         body.put("signature", "shouldNotAppear");
 
-        assertEquals("PW2401XH9KCX", Canonicalizer.canonicalize(body));
+        assertEquals("PW2401XH9KCX", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -128,7 +129,7 @@ class CanonicalizerTest {
         body.put("mid", "PW2401XH9KCX");
         body.put("displayDesc", "訂單 #12345 測試");
 
-        assertEquals("訂單 #12345 測試:PW2401XH9KCX", Canonicalizer.canonicalize(body));
+        assertEquals("訂單 #12345 測試:PW2401XH9KCX", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -137,7 +138,7 @@ class CanonicalizerTest {
         body.put("mid", "PW2401XH9KCX");
         body.put("remark", "line one\r\nline two");
 
-        assertEquals("PW2401XH9KCX:line one\r\nline two", Canonicalizer.canonicalize(body));
+        assertEquals("PW2401XH9KCX:line one\r\nline two", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -146,7 +147,7 @@ class CanonicalizerTest {
         body.put("a", "x");
         body.put("b", "https://merchant.example.com/x:y:z");
 
-        assertEquals("x:https://merchant.example.com/x:y:z", Canonicalizer.canonicalize(body));
+        assertEquals("x:https://merchant.example.com/x:y:z", Canonicalization.canonicalize(body));
     }
 
     @Test
@@ -154,6 +155,6 @@ class CanonicalizerTest {
         JsonObject body = new JsonObject();
         body.putObject("nested").put("x", 1);
 
-        assertThrows(IllegalArgumentException.class, () -> Canonicalizer.canonicalize(body));
+        assertThrows(IllegalArgumentException.class, () -> Canonicalization.canonicalize(body));
     }
 }

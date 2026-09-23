@@ -1,10 +1,12 @@
 package com.prestouniverse.pay.webhooks;
 
 import com.prestouniverse.pay.internal.JsonCodec;
+import com.prestouniverse.pay.internal.SdkAccess;
 import com.prestouniverse.pay.internal.json.JsonObject;
 import com.prestouniverse.pay.payments.PaymentDetail;
 import com.prestouniverse.pay.payments.PaymentStatus;
 
+import java.util.Collections;
 import java.util.List;
 
 public final class NotifyEvent {
@@ -39,7 +41,7 @@ public final class NotifyEvent {
         this.amount = amount;
         this.currencyCode = currencyCode;
         this.additionalData = additionalData;
-        this.paymentDetails = paymentDetails;
+        this.paymentDetails = Collections.unmodifiableList(paymentDetails);
         this.ts = ts;
     }
 
@@ -58,7 +60,7 @@ public final class NotifyEvent {
                 JsonCodec.requiredInt(node, "amount"),
                 JsonCodec.requiredText(node, "currencyCode"),
                 JsonCodec.text(node, "additionalData"),
-                PaymentDetail.parseList(paymentDetailsJson != null ? paymentDetailsJson : "[]"),
+                SdkAccess.payments().parsePaymentDetails(paymentDetailsJson != null ? paymentDetailsJson : "[]"),
                 JsonCodec.requiredText(node, "ts"));
     }
 
@@ -123,10 +125,17 @@ public final class NotifyEvent {
      * For {@link NotifyEventCode#AUTHORISED}, uses {@link #success()}. Call {@code payments().query()} for
      * authoritative payment status after handling a webhook.
      */
-    public String getPaymentStatus() {
+    public String paymentStatus() {
         if (NotifyEventCode.AUTHORISED.equals(eventCode)) {
             return success() ? PaymentStatus.AUTHORISED : PaymentStatus.FAILED;
         }
         return eventCode;
+    }
+
+    @Override
+    public String toString() {
+        return "NotifyEvent{eventCode=" + eventCode + ", eventRefNum=" + eventRefNum + ", mid=" + mid
+                + ", paymentRefNum=" + paymentRefNum + ", txnRefNum=" + txnRefNum + ", success=" + success
+                + ", amount=" + amount + ", currencyCode=" + currencyCode + '}';
     }
 }

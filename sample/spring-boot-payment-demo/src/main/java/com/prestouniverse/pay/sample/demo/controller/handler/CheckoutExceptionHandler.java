@@ -2,6 +2,7 @@ package com.prestouniverse.pay.sample.demo.controller.handler;
 
 import com.prestouniverse.pay.exception.PrestoPayApiException;
 import com.prestouniverse.pay.exception.PrestoPayException;
+import com.prestouniverse.pay.exception.PrestoPayResponseException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.sample.demo.controller.HostedCheckoutController;
 import com.prestouniverse.pay.sample.demo.controller.SelfHostedCheckoutController;
@@ -49,6 +50,9 @@ public class CheckoutExceptionHandler {
                     signatureError.canonicalString());
             model.addAttribute("signatureError", true);
             model.addAttribute("signatureSide", signatureError.side().name());
+        } else if (exception instanceof PrestoPayResponseException) {
+            log.warn("Checkout received an unparseable Presto response path={} message={}; the payment may exist, "
+                    + "reconcile with query by txnRefNum", request.getRequestURI(), exception.getMessage());
         } else {
             log.warn("Checkout failed path={}: {}", request.getRequestURI(), exception.getMessage());
         }

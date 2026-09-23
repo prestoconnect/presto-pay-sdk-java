@@ -25,7 +25,7 @@ public final class PaymentDetail {
         this.refNum = refNum;
     }
 
-    public static List<PaymentDetail> parseList(String json) {
+    static List<PaymentDetail> parseList(String json) {
         List<PaymentDetail> details = new ArrayList<>();
         for (JsonObject node : JsonCodec.parseObjectArray(json)) {
             details.add(fromJson(node));
@@ -65,5 +65,10 @@ public final class PaymentDetail {
 
     public String refNum() {
         return refNum;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentDetail{method=" + method + ", amount=" + amount + ", refNum=" + refNum + '}';
     }
 }

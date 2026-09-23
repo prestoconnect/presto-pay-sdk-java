@@ -31,7 +31,6 @@ public class PrestoPayConfiguration {
             client = PrestoPayClient.builder()
                     .environment(parseEnvironment(properties.getEnvironment()))
                     .merchantId(properties.getMid())
-                    .merchantRefNum(properties.getMrn())
                     .privateKey(ClasspathKeyResources.privateKeyFromPkcs12(
                             properties.getKeystorePath(),
                             properties.getKeystorePassword().toCharArray(),
@@ -46,9 +45,9 @@ public class PrestoPayConfiguration {
      * When full {@code PRESTOPAY_*} env is set, defer to the SDK (e.g. CI or production-like runs).
      */
     private static boolean useEnvironmentVariables() {
-        return System.getenv("PRESTOPAY_KEYSTORE_PATH") != null
+        return System.getenv("PRESTOPAY_MID") != null
+                && System.getenv("PRESTOPAY_KEYSTORE_PATH") != null
                 && System.getenv("PRESTOPAY_KEYSTORE_PASSWORD") != null
-                && System.getenv("PRESTOPAY_KEYSTORE_ALIAS") != null
                 && System.getenv("PRESTOPAY_PUBLIC_KEY_PATH") != null;
     }
 

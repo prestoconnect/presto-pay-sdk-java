@@ -8,12 +8,12 @@ public final class PaymentReverseResponse {
     private final String prestoMrn;
     private final String paymentRefNum;
     private final String prestoReversalRefNum;
-    private final int amount;
+    private final Integer amount;
     private final String currencyCode;
     private final String paymentStatus;
     private final String ts;
 
-    private PaymentReverseResponse(String prestoMrn, String paymentRefNum, String prestoReversalRefNum, int amount,
+    private PaymentReverseResponse(String prestoMrn, String paymentRefNum, String prestoReversalRefNum, Integer amount,
             String currencyCode, String paymentStatus, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
@@ -25,12 +25,11 @@ public final class PaymentReverseResponse {
     }
 
     static PaymentReverseResponse fromJson(JsonObject node) {
-        Integer amount = JsonCodec.optInt(node, "amount");
         return new PaymentReverseResponse(
                 JsonCodec.text(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
                 JsonCodec.text(node, "prestoReversalRefNum"),
-                amount != null ? amount : 0,
+                JsonCodec.optInt(node, "amount"),
                 JsonCodec.text(node, "currencyCode"),
                 JsonCodec.text(node, "paymentStatus"),
                 JsonCodec.text(node, "ts"));
@@ -48,7 +47,8 @@ public final class PaymentReverseResponse {
         return prestoReversalRefNum;
     }
 
-    public int amount() {
+    /** Amount in minor currency units, or {@code null} if the gateway omitted it. */
+    public Integer amount() {
         return amount;
     }
 
@@ -62,5 +62,12 @@ public final class PaymentReverseResponse {
 
     public String ts() {
         return ts;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentReverseResponse{paymentRefNum=" + paymentRefNum + ", prestoReversalRefNum="
+                + prestoReversalRefNum + ", paymentStatus=" + paymentStatus + ", amount=" + amount
+                + ", currencyCode=" + currencyCode + '}';
     }
 }

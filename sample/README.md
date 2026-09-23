@@ -16,7 +16,7 @@
 
 Copy the `.p12` and `.der` files into [`src/main/resources/keys/`](spring-boot-payment-demo/src/main/resources/keys/) — see [`keys/README.md`](spring-boot-payment-demo/src/main/resources/keys/README.md). They are gitignored; obtain them from your Presto onboarding pack.
 
-Override any value with `PRESTOPAY_*` environment variables or `application-local.yml`. If **all** of `PRESTOPAY_KEYSTORE_PATH`, `PRESTOPAY_KEYSTORE_PASSWORD`, `PRESTOPAY_KEYSTORE_ALIAS`, and `PRESTOPAY_PUBLIC_KEY_PATH` are set, the app uses `PrestoPayClient.fromEnv()` instead of `application.yml`.
+Override any value with `PRESTOPAY_*` environment variables or `application-local.yml`. If **all** of `PRESTOPAY_MID`, `PRESTOPAY_KEYSTORE_PATH`, `PRESTOPAY_KEYSTORE_PASSWORD`, and `PRESTOPAY_PUBLIC_KEY_PATH` are set, the app uses `PrestoPayClient.fromEnv()` instead of `application.yml`.
 
 ### Checkout UIs
 

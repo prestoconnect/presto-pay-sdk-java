@@ -1,15 +1,13 @@
 package com.prestouniverse.pay.crypto;
 
-import com.prestouniverse.pay.internal.json.JsonArray;
+import com.prestouniverse.pay.internal.Canonicalization;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+/**
+ * Reproduces the gateway canonical string that request, response, and webhook signatures cover. Use it to
+ * debug signature mismatches; the SDK signs and verifies automatically.
+ */
 public final class Canonicalizer {
-
-    private static final String SIGNATURE_FIELD = "signature";
 
     private Canonicalizer() {
     }
@@ -17,50 +15,11 @@ public final class Canonicalizer {
     /**
      * Builds the gateway canonical string from a JSON request or response body.
      *
-     * @param json UTF-8 JSON object text (must not include a {@code signature} field when verifying)
+     * @param json UTF-8 JSON object text; a {@code signature} field, if present, is excluded
      * @return colon-separated values in ascending key order
+     * @throws IllegalArgumentException if {@code json} is not a JSON object or contains unsupported value types
      */
     public static String canonicalizeJson(String json) {
-        return canonicalize(JsonObject.parse(json));
-    }
-
-    public static String canonicalize(JsonObject body) {
-        List<String> keys = new ArrayList<>();
-        for (String key : body.fieldNames()) {
-            if (!SIGNATURE_FIELD.equals(key)) {
-                keys.add(key);
-            }
-        }
-        Collections.sort(keys);
-
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < keys.size(); i++) {
-            if (i > 0) {
-                result.append(':');
-            }
-            String key = keys.get(i);
-            result.append(render(key, body.get(key)));
-        }
-        return result.toString();
-    }
-
-    private static String render(String key, Object value) {
-        if (value == null) {
-            return "";
-        }
-        if (value instanceof String) {
-            return (String) value;
-        }
-        if (value instanceof Boolean) {
-            return ((Boolean) value) ? "true" : "false";
-        }
-        if (value instanceof Integer || value instanceof Long) {
-            return value.toString();
-        }
-        if (value instanceof JsonArray) {
-            return value.toString();
-        }
-        throw new IllegalArgumentException(
-                "Cannot canonicalize field '" + key + "': unsupported value type " + value.getClass());
+        return Canonicalization.canonicalize(JsonObject.parse(json));
     }
 }

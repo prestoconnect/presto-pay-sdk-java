@@ -7,31 +7,54 @@ import com.prestouniverse.pay.payments.PaymentStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NotifyEventTest {
 
     @Test
     void authorisedSuccessMapsToAuthorisedOrFailed() {
-        assertEquals(PaymentStatus.AUTHORISED, parse(NotifyEventCode.AUTHORISED, true).getPaymentStatus());
-        assertEquals(PaymentStatus.FAILED, parse(NotifyEventCode.AUTHORISED, false).getPaymentStatus());
+        assertEquals(PaymentStatus.AUTHORISED, parse(NotifyEventCode.AUTHORISED, true).paymentStatus());
+        assertEquals(PaymentStatus.FAILED, parse(NotifyEventCode.AUTHORISED, false).paymentStatus());
     }
 
     @Test
     void knownEventCodesMapToMatchingPaymentStatus() {
-        assertEquals(PaymentStatus.CANCELLED, parse(NotifyEventCode.CANCELLED, false).getPaymentStatus());
-        assertEquals(PaymentStatus.REVERSED, parse(NotifyEventCode.REVERSED, true).getPaymentStatus());
-        assertEquals(PaymentStatus.REFUNDED, parse(NotifyEventCode.REFUNDED, true).getPaymentStatus());
-        assertEquals(PaymentStatus.EXPIRED, parse(NotifyEventCode.EXPIRED, false).getPaymentStatus());
+        assertEquals(PaymentStatus.CANCELLED, parse(NotifyEventCode.CANCELLED, false).paymentStatus());
+        assertEquals(PaymentStatus.REVERSED, parse(NotifyEventCode.REVERSED, true).paymentStatus());
+        assertEquals(PaymentStatus.REFUNDED, parse(NotifyEventCode.REFUNDED, true).paymentStatus());
+        assertEquals(PaymentStatus.EXPIRED, parse(NotifyEventCode.EXPIRED, false).paymentStatus());
     }
 
     @Test
     void unknownEventCodeIsPreserved() {
         NotifyEvent event = parse("FutureEvent", true);
         assertEquals("FutureEvent", event.eventCode());
-        assertEquals("FutureEvent", event.getPaymentStatus());
+        assertEquals("FutureEvent", event.paymentStatus());
+    }
+
+    @Test
+    void toStringShowsIdentifiersButNotUserOrAdditionalData() {
+        JsonObject body = body(NotifyEventCode.AUTHORISED, true);
+        body.put("userRefNum", "user-secret");
+        body.put("additionalData", "extra-secret");
+        body.put("paymentDetails", "[{\"method\":\"Card\",\"amount\":100,\"cardBin\":\"411111\",\"refNum\":\"R1\"}]");
+        NotifyEvent event = NotifyEvent.fromJson(body);
+
+        String text = event.toString() + event.paymentDetails();
+
+        assertTrue(text.contains("paymentRefNum=PP1"));
+        assertTrue(text.contains("refNum=R1"));
+        assertFalse(text.contains("user-secret"));
+        assertFalse(text.contains("extra-secret"));
+        assertFalse(text.contains("411111"));
     }
 
     private static NotifyEvent parse(String eventCode, boolean success) {
+        return NotifyEvent.fromJson(body(eventCode, success));
+    }
+
+    private static JsonObject body(String eventCode, boolean success) {
         JsonObject body = JsonCodec.newObject();
         body.put("eventCode", eventCode);
         body.put("mid", "MID");
@@ -45,6 +68,6 @@ class NotifyEventTest {
         body.put("currencyCode", "MYR");
         body.put("paymentDetails", "[]");
         body.put("ts", "20250423093000.000");
-        return NotifyEvent.fromJson(body);
+        return body;
     }
 }

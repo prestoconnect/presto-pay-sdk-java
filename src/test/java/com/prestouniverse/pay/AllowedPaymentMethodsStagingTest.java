@@ -14,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Live staging init with {@code allowedPaymentMethods}. Not run by default.
  *
- * <p>Run with {@code PRESTOPAY_STAGING_SMOKE=1} and {@link PrestoPayClient#fromEnv()} variables.
+ * <p>Run with {@code PRESTOPAY_STAGING_SMOKE=1}, {@link PrestoPayClient#fromEnv()} variables, and the test-only
+ * {@code PRESTOPAY_MRN}.
  */
 @Tag("staging")
 @EnabledIfEnvironmentVariable(named = "PRESTOPAY_STAGING_SMOKE", matches = "1")
@@ -27,6 +28,7 @@ class AllowedPaymentMethodsStagingTest {
         PrestoPayClient client = PrestoPayClient.fromEnv();
         String txnRefNum = "sdk-apm-" + System.currentTimeMillis();
         PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
+                .merchantRefNum(System.getenv("PRESTOPAY_MRN"))
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum(txnRefNum)
                 .displayDesc("APM smoke Wallet")

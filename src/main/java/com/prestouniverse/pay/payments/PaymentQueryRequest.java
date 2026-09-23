@@ -6,13 +6,11 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 
 public final class PaymentQueryRequest {
 
-    private final String merchantId;
     private final String merchantRefNum;
     private final String paymentRefNum;
     private final String txnRefNum;
 
     private PaymentQueryRequest(Builder builder) {
-        this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.paymentRefNum = builder.paymentRefNum;
         this.txnRefNum = builder.txnRefNum;
@@ -20,10 +18,6 @@ public final class PaymentQueryRequest {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public String merchantId() {
-        return merchantId;
     }
 
     public String merchantRefNum() {
@@ -39,17 +33,11 @@ public final class PaymentQueryRequest {
 
     public static final class Builder {
 
-        private String merchantId;
         private String merchantRefNum;
         private String paymentRefNum;
         private String txnRefNum;
 
         private Builder() {
-        }
-
-        public Builder merchantId(String merchantId) {
-            this.merchantId = merchantId;
-            return this;
         }
 
         public Builder merchantRefNum(String merchantRefNum) {
@@ -68,6 +56,7 @@ public final class PaymentQueryRequest {
         }
 
         public PaymentQueryRequest build() {
+            Validation.requireNonBlank("merchantRefNum", merchantRefNum);
             if (paymentRefNum == null && txnRefNum == null) {
                 throw new PrestoPayConfigException("paymentRefNum",
                         "either paymentRefNum or txnRefNum is required");

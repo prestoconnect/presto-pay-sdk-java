@@ -1,9 +1,11 @@
 package com.prestouniverse.pay;
 
-import com.prestouniverse.pay.crypto.Canonicalizer;
 import com.prestouniverse.pay.crypto.RsaSignatureService;
 import com.prestouniverse.pay.exception.PrestoPayApiException;
+import com.prestouniverse.pay.exception.PrestoPayConfigException;
+import com.prestouniverse.pay.exception.PrestoPayResponseException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
+import com.prestouniverse.pay.internal.Canonicalization;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.Timestamps;
 import com.prestouniverse.pay.internal.json.JsonObject;
@@ -50,10 +52,9 @@ class PrestoPayClientContractTest {
         mockGateway = MockGatewayServer.start();
         client = PrestoPayClient.builder()
                 .baseUrl(mockGateway.baseUrl())
-                .merchantId(MID)
-                .merchantRefNum(MRN)
                 .privateKey(TestKeys.privateKey())
                 .prestoPublicKey(TestKeys.publicKey())
+                .merchantId(MID)
                 .retryPolicy(RetryPolicy.none())
                 .connectTimeout(Duration.ofSeconds(2))
                 .readTimeout(Duration.ofSeconds(2))
@@ -82,7 +83,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
+        PaymentInitResponse response = client.payments().init(initRequest()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN10001")
                 .displayDesc("Order #12345")
@@ -125,7 +126,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
+        PaymentInitResponse response = client.payments().init(initRequest()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN10001")
                 .displayDesc(displayDesc)
@@ -159,7 +160,7 @@ class PrestoPayClientContractTest {
         });
 
         PaymentQueryResponse response = client.payments().query(
-                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
+                queryRequest().paymentRefNum("PP250423ND56NHO").build());
 
         assertEquals(PaymentStatus.AUTHORISED, response.paymentStatus());
         assertEquals(1, response.paymentDetails().size());
@@ -187,7 +188,7 @@ class PrestoPayClientContractTest {
         });
 
         PaymentQueryResponse response = client.payments().query(
-                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
+                queryRequest().paymentRefNum("PP250423ND56NHO").build());
 
         assertNull(response.paymentDetails().get(0).method());
     }
@@ -212,7 +213,7 @@ class PrestoPayClientContractTest {
         });
 
         PaymentQueryResponse response = client.payments().query(
-                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
+                queryRequest().paymentRefNum("PP250423ND56NHO").build());
 
         assertEquals("PD-REF-99", response.paymentDetails().get(0).refNum());
     }
@@ -232,7 +233,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentReverseResponse response = client.payments().reverse(PaymentReverseRequest.builder()
+        PaymentReverseResponse response = client.payments().reverse(reverseRequest()
                 .paymentRefNum("PP250423ND56NHO")
                 .reversalRefNum("REV10001")
                 .remark("Customer cancelled order")
@@ -259,7 +260,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentRefundResponse response = client.payments().refund(PaymentRefundRequest.builder()
+        PaymentRefundResponse response = client.payments().refund(refundRequest()
                 .paymentRefNum("PP250423ND56NHO")
                 .refundRefNum("RFD10001")
                 .remark("Customer requested refund")
@@ -288,7 +289,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        client.payments().refund(PaymentRefundRequest.builder()
+        client.payments().refund(refundRequest()
                 .paymentRefNum("PP250423ND56NHO")
                 .refundRefNum("RFD10001")
                 .remark(remark)
@@ -314,14 +315,14 @@ class PrestoPayClientContractTest {
             response.put("ts", "20250423104530.000");
             response.put("success", true);
 
-            String canonical = Canonicalizer.canonicalize(response);
+            String canonical = Canonicalization.canonicalize(response);
             response.put("signature", RsaSignatureService.sign(canonical, TestKeys.privateKey()));
             response.put("amount", 999999);
             return MockGatewayServer.Response.preSigned(200, response);
         });
 
         assertThrows(PrestoPaySignatureException.class, () -> client.payments().query(
-                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build()));
+                queryRequest().paymentRefNum("PP250423ND56NHO").build()));
     }
 
     @Test
@@ -329,7 +330,7 @@ class PrestoPayClientContractTest {
         mockGateway.handler(request -> MockGatewayServer.Response.systemError(400, "1006", "Invalid request."));
 
         PrestoPayApiException exception = assertThrows(PrestoPayApiException.class, () -> client.payments().query(
-                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build()));
+                queryRequest().paymentRefNum("PP250423ND56NHO").build()));
 
         assertTrue(exception.isSystemError());
         assertEquals("1006", exception.errorCode());
@@ -348,7 +349,7 @@ class PrestoPayClientContractTest {
         });
 
         PrestoPayApiException exception = assertThrows(PrestoPayApiException.class, () -> client.payments().init(
-                PaymentInitRequest.builder()
+                initRequest()
                         .txnType(TxnType.QR_PAY)
                         .txnRefNum("TXN10001")
                         .displayDesc("Order #12345")
@@ -360,9 +361,99 @@ class PrestoPayClientContractTest {
     }
 
     @Test
-    void unsignedWebhookBodyIsRejected() {
-        WebhookVerifier verifier = WebhookVerifier.builder().prestoPublicKey(TestKeys.publicKey()).build();
-        assertThrows(PrestoPaySignatureException.class, () -> verifier.parse("not json at all"));
+    void initResponseWithoutNonEssentialFieldsStillReturnsThePaymentUrl() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("paymentRefNum", "PP250423ND56NHO");
+            response.put("paymentStatus", "PendingAuthorise");
+            response.put("paymentUrl", "https://hpp-staging.prestouniverse.com/PM240110XDSFC/PP250423ND56NHO");
+            response.put("amount", 1200);
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        PaymentInitResponse response = client.payments().init(initRequest()
+                .txnType(TxnType.QR_PAY)
+                .txnRefNum("TXN10001")
+                .displayDesc("Order #12345")
+                .build());
+
+        assertEquals("https://hpp-staging.prestouniverse.com/PM240110XDSFC/PP250423ND56NHO", response.paymentUrl());
+        assertNull(response.currencyCode());
+    }
+
+    @Test
+    void signedResponseMissingARequiredFieldThrowsAResponseException() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("paymentStatus", "Authorised");
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        PrestoPayResponseException exception = assertThrows(PrestoPayResponseException.class,
+                () -> client.payments().query(queryRequest().paymentRefNum("PP1").build()));
+
+        assertEquals(PrestoPayResponseException.Source.RESPONSE, exception.source());
+        assertTrue(exception.rawBody().contains("Authorised"));
+    }
+
+    @Test
+    void responseWithAnUncanonicalizableValueThrowsAResponseException() {
+        String body = "{\"paymentRefNum\":\"PP1\",\"amount\":12.5,\"success\":true,\"signature\":\"AAAA\"}";
+        mockGateway.handler(request -> MockGatewayServer.Response.raw(200, body));
+
+        PrestoPayResponseException exception = assertThrows(PrestoPayResponseException.class,
+                () -> client.payments().query(queryRequest().paymentRefNum("PP1").build()));
+
+        assertEquals(body, exception.rawBody());
+    }
+
+    @Test
+    void nonJsonSuccessResponseThrowsAResponseException() {
+        mockGateway.handler(request -> MockGatewayServer.Response.raw(200, "<html>proxy error</html>"));
+
+        assertThrows(PrestoPayResponseException.class,
+                () -> client.payments().query(queryRequest().paymentRefNum("PP1").build()));
+    }
+
+    @Test
+    void omittedAmountsAreNullRatherThanZero() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("paymentRefNum", "PP250423ND56NHO");
+            response.put("paymentStatus", "Refunded");
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        PaymentRefundResponse refund = client.payments().refund(refundRequest()
+                .paymentRefNum("PP250423ND56NHO")
+                .refundRefNum("RFD10001")
+                .remark("Customer requested refund")
+                .build());
+        PaymentQueryResponse query = client.payments().query(
+                queryRequest().paymentRefNum("PP250423ND56NHO").build());
+
+        assertNull(refund.amount());
+        assertNull(refund.refundAmount());
+        assertNull(query.amount());
+    }
+
+    @Test
+    void malformedWebhookBodyIsRejected() {
+        WebhookVerifier verifier = verifier();
+
+        PrestoPayResponseException exception = assertThrows(PrestoPayResponseException.class,
+                () -> verifier.parse("not json at all"));
+
+        assertEquals(PrestoPayResponseException.Source.WEBHOOK, exception.source());
+    }
+
+    @Test
+    void webhookWithoutASignatureIsRejected() {
+        assertThrows(PrestoPaySignatureException.class,
+                () -> client.webhooks().parse("{\"mid\":\"" + MID + "\",\"eventCode\":\"Authorised\"}"));
     }
 
     @Test
@@ -381,24 +472,156 @@ class PrestoPayClientContractTest {
         body.put("additionalData", "");
         body.put("paymentDetails", "[{\"method\":\"Wallet\",\"amount\":5000}]");
         body.put("ts", Timestamps.now(Clock.systemUTC()));
-        String canonical = Canonicalizer.canonicalize(body);
+        String canonical = Canonicalization.canonicalize(body);
         body.put("signature", RsaSignatureService.sign(canonical, TestKeys.privateKey()));
 
-        WebhookVerifier verifier = WebhookVerifier.builder().prestoPublicKey(TestKeys.publicKey()).build();
+        WebhookVerifier verifier = verifier();
         NotifyEvent event = verifier.parse(JsonCodec.write(body));
 
         assertEquals(NotifyEventCode.AUTHORISED, event.eventCode());
         assertEquals(PaymentStatus.AUTHORISED, event.eventCode());
         assertTrue(event.success());
-        assertEquals(PaymentStatus.AUTHORISED, event.getPaymentStatus());
+        assertEquals(PaymentStatus.AUTHORISED, event.paymentStatus());
         assertEquals(1, event.paymentDetails().size());
+    }
+
+    @Test
+    void clientWebhooksAcceptEventsForTheConfiguredMerchant() {
+        NotifyEvent event = client.webhooks().parse(signedWebhook(MID, Timestamps.now(Clock.systemUTC())));
+
+        assertEquals(MID, event.mid());
+    }
+
+    @Test
+    void clientWebhooksRejectGenuineEventsForAnotherMerchant() {
+        String body = signedWebhook("OTHER-MERCHANT", Timestamps.now(Clock.systemUTC()));
+
+        PrestoPaySignatureException exception = assertThrows(PrestoPaySignatureException.class,
+                () -> client.webhooks().parse(body));
+
+        assertEquals(PrestoPaySignatureException.Side.WEBHOOK, exception.side());
+    }
+
+    @Test
+    void clientSendsItsMidAndEachRequestsOwnPrestoMrn() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("paymentRefNum", "PP1");
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        client.payments().query(PaymentQueryRequest.builder().merchantRefNum("MRN-1").paymentRefNum("PP1").build());
+        assertEquals(MID, JsonCodec.text(mockGateway.lastRequestBody(), "mid"));
+        assertEquals("MRN-1", JsonCodec.text(mockGateway.lastRequestBody(), "prestoMrn"));
+
+        client.payments().query(PaymentQueryRequest.builder().merchantRefNum("MRN-2").paymentRefNum("PP1").build());
+        assertEquals(MID, JsonCodec.text(mockGateway.lastRequestBody(), "mid"));
+        assertEquals("MRN-2", JsonCodec.text(mockGateway.lastRequestBody(), "prestoMrn"));
+        assertEquals(MID, client.merchantId());
+    }
+
+    @Test
+    void clientAndWebhookVerifierRequireAMerchantId() {
+        assertEquals("merchantId", assertThrows(PrestoPayConfigException.class, () -> PrestoPayClient.builder()
+                .baseUrl(mockGateway.baseUrl())
+                .privateKey(TestKeys.privateKey())
+                .prestoPublicKey(TestKeys.publicKey())
+                .build()).field());
+        assertEquals("merchantId", assertThrows(PrestoPayConfigException.class, () -> WebhookVerifier.builder()
+                .prestoPublicKey(TestKeys.publicKey())
+                .merchantId(" ")
+                .build()).field());
+    }
+
+    @Test
+    void signedWebhookMissingARequiredFieldThrowsAResponseException() {
+        JsonObject body = JsonCodec.newObject();
+        body.put("eventCode", NotifyEventCode.AUTHORISED);
+        body.put("mid", MID);
+        String canonical = Canonicalization.canonicalize(body);
+        body.put("signature", RsaSignatureService.sign(canonical, TestKeys.privateKey()));
+
+        assertThrows(PrestoPayResponseException.class, () -> client.webhooks().parse(JsonCodec.write(body)));
+    }
+
+    @Test
+    void signedWebhookWithAnUnparseableTimestampThrowsAResponseException() {
+        WebhookVerifier verifier = WebhookVerifier.builder()
+                .prestoPublicKey(TestKeys.publicKey())
+                .merchantId(MID)
+                .maxTimestampAge(Duration.ofMinutes(15))
+                .build();
+
+        assertThrows(PrestoPayResponseException.class, () -> verifier.parse(signedWebhook(MID, "not-a-ts")));
+    }
+
+    @Test
+    void staleWebhookIsRejectedWhenAReplayWindowIsConfigured() {
+        WebhookVerifier verifier = WebhookVerifier.builder()
+                .prestoPublicKey(TestKeys.publicKey())
+                .merchantId(MID)
+                .maxTimestampAge(Duration.ofMinutes(15))
+                .build();
+
+        assertThrows(PrestoPaySignatureException.class,
+                () -> verifier.parse(signedWebhook(MID, "20250423093000.000")));
+    }
+
+    @Test
+    void deeplyNestedWebhookBodyIsRejectedBeforeSignatureVerification() {
+        StringBuilder body = new StringBuilder("{\"a\":");
+        for (int i = 0; i < 100_000; i++) {
+            body.append('[');
+        }
+
+        assertThrows(PrestoPayResponseException.class, () -> client.webhooks().parse(body.toString()));
+    }
+
+    private static WebhookVerifier verifier() {
+        return WebhookVerifier.builder().prestoPublicKey(TestKeys.publicKey()).merchantId(MID).build();
+    }
+
+    private static PaymentInitRequest.Builder initRequest() {
+        return PaymentInitRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static PaymentQueryRequest.Builder queryRequest() {
+        return PaymentQueryRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static PaymentReverseRequest.Builder reverseRequest() {
+        return PaymentReverseRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static PaymentRefundRequest.Builder refundRequest() {
+        return PaymentRefundRequest.builder().merchantRefNum(MRN);
+    }
+
+    private static String signedWebhook(String mid, String ts) {
+        JsonObject body = JsonCodec.newObject();
+        body.put("eventCode", NotifyEventCode.AUTHORISED);
+        body.put("mid", mid);
+        body.put("prestoMrn", MRN);
+        body.put("paymentRefNum", "PP250423ND56NHO");
+        body.put("txnRefNum", "TXN998877");
+        body.put("success", true);
+        body.put("eventRefNum", "EV12345");
+        body.put("eventTs", "20250423093000.000");
+        body.put("amount", 5000);
+        body.put("currencyCode", "MYR");
+        body.put("paymentDetails", "[]");
+        body.put("ts", ts);
+        String canonical = Canonicalization.canonicalize(body);
+        body.put("signature", RsaSignatureService.sign(canonical, TestKeys.privateKey()));
+        return JsonCodec.write(body);
     }
 
     private void assertRequestIsCorrectlySigned(JsonObject sentRequest) {
         String signature = JsonCodec.text(sentRequest, "signature");
         JsonObject withoutSignature = sentRequest.deepCopy();
         withoutSignature.remove("signature");
-        String canonical = Canonicalizer.canonicalize(withoutSignature);
+        String canonical = Canonicalization.canonicalize(withoutSignature);
         assertTrue(RsaSignatureService.verify(canonical, signature, TestKeys.publicKey()));
     }
 }

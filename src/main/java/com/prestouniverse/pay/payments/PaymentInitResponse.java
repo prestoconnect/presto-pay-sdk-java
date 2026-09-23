@@ -11,7 +11,7 @@ public final class PaymentInitResponse {
     private final String paymentStatus;
     private final String paymentUrl;
     private final String userRefNum;
-    private final int amount;
+    private final Integer amount;
     private final String currencyCode;
     private final String paymentRequestDate;
     private final String paymentFinalisedDate;
@@ -19,7 +19,7 @@ public final class PaymentInitResponse {
     private final String ts;
 
     private PaymentInitResponse(String prestoMrn, String paymentRefNum, String txnRefNum, String paymentStatus,
-            String paymentUrl, String userRefNum, int amount, String currencyCode, String paymentRequestDate,
+            String paymentUrl, String userRefNum, Integer amount, String currencyCode, String paymentRequestDate,
             String paymentFinalisedDate, String additionalData, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
@@ -37,18 +37,18 @@ public final class PaymentInitResponse {
 
     static PaymentInitResponse fromJson(JsonObject node) {
         return new PaymentInitResponse(
-                JsonCodec.requiredText(node, "prestoMrn"),
+                JsonCodec.text(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
-                JsonCodec.requiredText(node, "txnRefNum"),
+                JsonCodec.text(node, "txnRefNum"),
                 JsonCodec.requiredText(node, "paymentStatus"),
                 JsonCodec.text(node, "paymentUrl"),
                 JsonCodec.text(node, "userRefNum"),
-                JsonCodec.requiredInt(node, "amount"),
-                JsonCodec.requiredText(node, "currencyCode"),
-                JsonCodec.requiredText(node, "paymentRequestDate"),
+                JsonCodec.optInt(node, "amount"),
+                JsonCodec.text(node, "currencyCode"),
+                JsonCodec.text(node, "paymentRequestDate"),
                 JsonCodec.text(node, "paymentFinalisedDate"),
                 JsonCodec.text(node, "additionalData"),
-                JsonCodec.requiredText(node, "ts"));
+                JsonCodec.text(node, "ts"));
     }
 
     public String prestoMrn() {
@@ -75,7 +75,8 @@ public final class PaymentInitResponse {
         return userRefNum;
     }
 
-    public int amount() {
+    /** Amount in minor currency units, or {@code null} if the gateway omitted it. */
+    public Integer amount() {
         return amount;
     }
 
@@ -97,5 +98,11 @@ public final class PaymentInitResponse {
 
     public String ts() {
         return ts;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentInitResponse{paymentRefNum=" + paymentRefNum + ", txnRefNum=" + txnRefNum
+                + ", paymentStatus=" + paymentStatus + ", amount=" + amount + ", currencyCode=" + currencyCode + '}';
     }
 }

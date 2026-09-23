@@ -3,6 +3,7 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+import java.util.Collections;
 import java.util.List;
 
 public final class PaymentQueryResponse {
@@ -12,7 +13,7 @@ public final class PaymentQueryResponse {
     private final String txnRefNum;
     private final String userRefNum;
     private final String paymentStatus;
-    private final int amount;
+    private final Integer amount;
     private final String currencyCode;
     private final String paymentRequestDate;
     private final String paymentFinalisedDate;
@@ -50,8 +51,8 @@ public final class PaymentQueryResponse {
         this.refundRequestDate = builder.refundRequestDate;
         this.refundFinalisedDate = builder.refundFinalisedDate;
         this.additionalData = builder.additionalData;
-        this.refundDetails = builder.refundDetails;
-        this.paymentDetails = builder.paymentDetails;
+        this.refundDetails = Collections.unmodifiableList(builder.refundDetails);
+        this.paymentDetails = Collections.unmodifiableList(builder.paymentDetails);
         this.ts = builder.ts;
     }
 
@@ -62,8 +63,7 @@ public final class PaymentQueryResponse {
         builder.txnRefNum = JsonCodec.text(node, "txnRefNum");
         builder.userRefNum = JsonCodec.text(node, "userRefNum");
         builder.paymentStatus = JsonCodec.text(node, "paymentStatus");
-        Integer amount = JsonCodec.optInt(node, "amount");
-        builder.amount = amount != null ? amount : 0;
+        builder.amount = JsonCodec.optInt(node, "amount");
         builder.currencyCode = JsonCodec.text(node, "currencyCode");
         builder.paymentRequestDate = JsonCodec.text(node, "paymentRequestDate");
         builder.paymentFinalisedDate = JsonCodec.text(node, "paymentFinalisedDate");
@@ -105,7 +105,8 @@ public final class PaymentQueryResponse {
         return paymentStatus;
     }
 
-    public int amount() {
+    /** Amount in minor currency units, or {@code null} if the gateway omitted it. */
+    public Integer amount() {
         return amount;
     }
 
@@ -173,13 +174,20 @@ public final class PaymentQueryResponse {
         return ts;
     }
 
+    @Override
+    public String toString() {
+        return "PaymentQueryResponse{paymentRefNum=" + paymentRefNum + ", txnRefNum=" + txnRefNum
+                + ", paymentStatus=" + paymentStatus + ", amount=" + amount + ", currencyCode=" + currencyCode
+                + ", reversalStatus=" + reversalStatus + ", refundStatus=" + refundStatus + '}';
+    }
+
     private static final class Builder {
         private String prestoMrn;
         private String paymentRefNum;
         private String txnRefNum;
         private String userRefNum;
         private String paymentStatus;
-        private int amount;
+        private Integer amount;
         private String currencyCode;
         private String paymentRequestDate;
         private String paymentFinalisedDate;
