@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Return from Presto</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body>
+<div class="wrap">
+  <header class="demo-header">
+    <h1>Back from Presto</h1>
+    <p>
+      After redirect, this page calls <code>payments().query()</code> for authoritative status.
+      Webhooks posted to <code>/presto/notify</code> are listed below when received.
+    </p>
+  </header>
+
+  <div class="card" th:if="${missingTxnRefNum}">
+    <p>
+      The return URL must include the merchant transaction reference as a path segment
+      (for example <code>/return/demo-abc123</code>). That value is set on payment
+      <code>init</code> via <code>redirectUrl</code>. Start a payment from the
+      <a th:href="@{/}">checkout demo</a> so Presto redirects back with the correct reference.
+    </p>
+  </div>
+
+  <div class="grid" th:if="${txnRefNum != null}" style="grid-template-columns: 1fr;">
+    <section class="card">
+      <h2>Transaction</h2>
+      <ul class="meta-list">
+        <li><span>Txn ref</span><span th:text="${txnRefNum}">demo-</span></li>
+        <li th:if="${checkout != null}">
+          <span>Checkout UI</span>
+          <span th:text="${checkout.checkoutFlow}">HOSTED</span>
+        </li>
+        <li th:if="${checkout != null and checkout.pageTitle != null}">
+          <span>Page title</span>
+          <span th:text="${checkout.pageTitle}">Acme</span>
+        </li>
+        <li th:if="${checkout != null and checkout.selectedPaymentMethod != null}">
+          <span>Selected method</span>
+          <span th:text="${checkout.selectedPaymentMethod}">PmPgCard</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card" th:if="${queryError != null}">
+      <h2>Query failed</h2>
+      <p class="hint" th:text="${queryError}">error</p>
+    </section>
+
+    <section class="card" th:if="${query != null}">
+      <h2>Query result</h2>
+      <ul class="meta-list">
+        <li><span>Status</span><span class="status-pill" th:text="${query.paymentStatus()}">Pending</span></li>
+        <li><span>Payment ref</span><span th:text="${query.paymentRefNum()}">PRN</span></li>
+        <li><span>Amount</span><span th:text="${query.amount()} + ' ' + ${query.currencyCode()}">1000 MYR</span></li>
+        <li th:if="${query.paymentFinalisedDate() != null}">
+          <span>Finalised</span><span th:text="${query.paymentFinalisedDate()}">date</span>
+        </li>
+      </ul>
+      <a class="btn btn-ghost" th:href="@{/return/{txnRefNum}(txnRefNum=${txnRefNum})}" style="margin-top:1rem;">Refresh query</a>
+    </section>
+  </div>
+
+  <section class="panel" th:if="${!#lists.isEmpty(recentWebhooks)}">
+    <h3>Recent webhooks</h3>
+    <table class="feed">
+      <thead>
+      <tr>
+        <th>Time</th>
+        <th>Event</th>
+        <th>Txn ref</th>
+        <th>OK</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="w : ${recentWebhooks}">
+        <td th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
+        <td th:text="${w.eventCode}">Authorised</td>
+        <td th:text="${w.txnRefNum}">demo-</td>
+        <td th:text="${w.success}">true</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p style="margin-top:1.5rem;">
+    <a th:href="@{/}" class="btn btn-ghost" style="width:auto;display:inline-flex;">← New simulation</a>
+  </p>
+</div>
+</body>
+</html>

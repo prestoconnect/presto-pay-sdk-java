@@ -79,7 +79,7 @@ PaymentQueryResponse status = client.payments().query(
 
 ## Webhooks
 
-Presto POSTs JSON to your `notifyUrl`. Acknowledge with HTTP **200** and body `{"resend":false}` before heavy work:
+Presto POSTs JSON to your `notifyUrl` from its infrastructure — the URL must be **publicly reachable** (not `localhost` unless you tunnel). Acknowledge with HTTP **200** and body `{"resend":false}` before heavy work:
 
 ```java
 WebhookVerifier verifier = WebhookVerifier.builder()
@@ -135,6 +135,10 @@ Release artifacts (sources + Javadoc): `mvn verify -Prelease`.
 ## Spring wiring
 
 See [docs/spring-wiring.md](docs/spring-wiring.md) for a minimal `@Configuration` example.
+
+## Sample app
+
+[sample/spring-boot-payment-demo/](sample/spring-boot-payment-demo/) — Spring Boot 2.7 sample (Java 8+): **hosted** and **self-hosted** checkout UIs. See [sample/README.md](sample/README.md).
 
 ## License
 

@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  thymeleaf:
+    cache: false
+
+app:
+  # Presto calls notifyUrl from its servers — set APP_PUBLIC_BASE_URL to a public URL (e.g. ngrok), not localhost.
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  default-currency: MYR
+
+# Staging mock merchant (11Street) — override with PRESTOPAY_* env or application-local.yml
+prestopay:
+  environment: ${PRESTOPAY_ENV:staging}
+  mid: ${PRESTOPAY_MID:11StreetMock}
+  mrn: ${PRESTOPAY_MRN:PM181019QGJWH4K}
+  keystore-path: ${PRESTOPAY_KEYSTORE_PATH:classpath:keys/presto_rm_keystore.p12}
+  keystore-password: ${PRESTOPAY_KEYSTORE_PASSWORD:123123123}
+  keystore-alias: ${PRESTOPAY_KEYSTORE_ALIAS:rm}
+  public-key-path: ${PRESTOPAY_PUBLIC_KEY_PATH:classpath:keys/presto_ext_service_dev.der}
+
+logging:
+  level:
+    com.prestouniverse.pay.sample: INFO
+    com.prestouniverse.pay: WARN

@@ -63,14 +63,19 @@ public final class JsonCodec {
         }
     }
 
+    /**
+     * Writes a JSON array of strings as a single string field (same wire shape as {@code itemList}).
+     * Presto Connect maps {@code allowedPaymentMethods} to a {@code String} on init, not a JSON array.
+     */
     public static void putStringArray(JsonObject node, String field, List<String> values) {
         if (values == null || values.isEmpty()) {
             return;
         }
-        JsonArray array = node.putArray(field);
+        JsonArray array = newArray();
         for (String value : values) {
             array.add(value);
         }
+        node.put(field, array.toString());
     }
 
     public static String text(JsonObject node, String field) {

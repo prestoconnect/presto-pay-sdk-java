@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Presto Pay SDK samples</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body class="page-hub">
+<div class="wrap">
+  <header class="demo-header">
+    <h1>Presto Pay SDK — Spring Boot samples</h1>
+    <p>Two checkout experiences powered by the same <code>PrestoPayClient</code>. Pick one to simulate a payment against staging.</p>
+    <dl class="demo-config">
+      <div class="demo-config-row">
+        <dt>Env</dt>
+        <dd th:text="${prestoEnv}">staging</dd>
+      </div>
+      <div class="demo-config-row">
+        <dt>mid</dt>
+        <dd th:text="${prestoMid}">11StreetMock</dd>
+      </div>
+      <div class="demo-config-row">
+        <dt>prestoMrn</dt>
+        <dd th:text="${prestoMrn}">PM…</dd>
+      </div>
+      <div class="demo-config-row">
+        <dt>Notify</dt>
+        <dd><code th:text="${notifyUrl}">notifyUrl</code></dd>
+      </div>
+      <div class="demo-config-row">
+        <dt>Return</dt>
+        <dd><code th:text="${redirectUrl} + '/{txnRefNum}'">return path</code></dd>
+      </div>
+    </dl>
+    <p class="hint hub-callback-note">
+      <strong>Webhooks:</strong> Presto must reach <code th:text="${notifyUrl}">notifyUrl</code> from the internet.
+      With the default <code>http://localhost:8080</code> base, notify events will not be delivered — set
+      <code>APP_PUBLIC_BASE_URL</code> to a public URL (for example an ngrok HTTPS origin) before testing notify.
+    </p>
+  </header>
+
+  <div class="grid hub-cards">
+    <a class="hub-card hosted" th:href="@{/hosted}">
+      <h2>Hosted payment page</h2>
+      <p>Minimal merchant UI: amount and description only. Presto hosts method selection and card entry on <code>paymentUrl</code>.</p>
+      <span class="hub-cta">Open hosted checkout →</span>
+    </a>
+    <a class="hub-card custom" th:href="@{/self-hosted}">
+      <h2>Self-hosted payment page</h2>
+      <p>Self-hosted checkout: page title, receipt details, and payment method tiles. SDK sends <code>allowedPaymentMethods</code> for the chosen method.</p>
+      <span class="hub-cta">Open self-hosted checkout →</span>
+    </a>
+  </div>
+
+  <section class="panel" th:if="${!#lists.isEmpty(recentWebhooks)}">
+    <h3>Recent webhooks (shared)</h3>
+    <table class="feed">
+      <thead>
+      <tr><th>Time</th><th>Event</th><th>Txn ref</th><th>OK</th></tr>
+      </thead>
+      <tbody>
+      <tr th:each="w : ${recentWebhooks}">
+        <td th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
+        <td th:text="${w.eventCode}">Authorised</td>
+        <td th:text="${w.txnRefNum}">demo-</td>
+        <td th:text="${w.success}">true</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+</body>
+</html>

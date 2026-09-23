@@ -92,6 +92,19 @@ class CanonicalizerTest {
     }
 
     @Test
+    void jsonEncodedStringArrayFieldMatchesNativeArrayCanonicalValue() {
+        JsonObject asArray = new JsonObject();
+        asArray.putArray("allowedPaymentMethods").add("Wallet").add("Card");
+        asArray.put("mid", "PW2401XH9KCX");
+
+        JsonObject asString = new JsonObject();
+        asString.put("allowedPaymentMethods", "[\"Wallet\",\"Card\"]");
+        asString.put("mid", "PW2401XH9KCX");
+
+        assertEquals(Canonicalizer.canonicalize(asArray), Canonicalizer.canonicalize(asString));
+    }
+
+    @Test
     void jsonStringFieldIsTreatedAsAnOrdinaryString() {
         JsonObject body = new JsonObject();
         body.put("paymentDetails", "[{\"method\":\"Wallet\",\"amount\":5000}]");
