@@ -47,6 +47,10 @@
 
     <section class="card" th:if="${queryError != null}">
       <h2>Query failed</h2>
+      <p class="hint" th:if="${querySignatureError}">
+        Response signature verification failed (<span th:text="${signatureSide}">RESPONSE</span>).
+        Confirm the Presto public key in config matches the environment.
+      </p>
       <p class="hint" th:text="${queryError}">error</p>
     </section>
 

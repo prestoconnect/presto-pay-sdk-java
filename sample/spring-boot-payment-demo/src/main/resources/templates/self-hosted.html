@@ -16,6 +16,10 @@
   <div class="alert error" th:if="${paymentError}">
     <strong>Could not start payment</strong>
     <p th:text="${message}">Error</p>
+    <p th:if="${signatureError}">
+      Response signature verification failed (<span th:text="${signatureSide}">RESPONSE</span>).
+      Confirm the Presto public key in config matches the environment.
+    </p>
     <p th:if="${errorCode != null}">
       <span th:text="${errorCode}">code</span>:
       <span th:text="${errorMessage}">message</span>

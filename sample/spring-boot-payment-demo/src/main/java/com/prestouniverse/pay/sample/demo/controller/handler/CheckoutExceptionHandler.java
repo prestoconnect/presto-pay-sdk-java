@@ -2,6 +2,7 @@ package com.prestouniverse.pay.sample.demo.controller.handler;
 
 import com.prestouniverse.pay.exception.PrestoPayApiException;
 import com.prestouniverse.pay.exception.PrestoPayException;
+import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.sample.demo.controller.HostedCheckoutController;
 import com.prestouniverse.pay.sample.demo.controller.SelfHostedCheckoutController;
 import com.prestouniverse.pay.sample.demo.controller.support.CheckoutViewAttributes;
@@ -39,6 +40,15 @@ public class CheckoutExceptionHandler {
             model.addAttribute("errorCode", apiError.errorCode());
             model.addAttribute("errorMessage", apiError.errorMessage());
             model.addAttribute("systemError", apiError.isSystemError());
+        } else if (exception instanceof PrestoPaySignatureException) {
+            PrestoPaySignatureException signatureError = (PrestoPaySignatureException) exception;
+            log.warn("Checkout signature verification failed path={} side={} message={} canonical={}",
+                    request.getRequestURI(),
+                    signatureError.side(),
+                    signatureError.getMessage(),
+                    signatureError.canonicalString());
+            model.addAttribute("signatureError", true);
+            model.addAttribute("signatureSide", signatureError.side().name());
         } else {
             log.warn("Checkout failed path={}: {}", request.getRequestURI(), exception.getMessage());
         }

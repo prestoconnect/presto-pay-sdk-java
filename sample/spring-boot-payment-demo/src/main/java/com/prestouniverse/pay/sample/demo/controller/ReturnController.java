@@ -1,6 +1,7 @@
 package com.prestouniverse.pay.sample.demo.controller;
 
 import com.prestouniverse.pay.exception.PrestoPayException;
+import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore;
 import com.prestouniverse.pay.sample.demo.service.WebPayCheckoutService;
@@ -46,6 +47,12 @@ public class ReturnController {
         try {
             PaymentQueryResponse queryResult = checkoutService.query(merchantTxnRef);
             model.addAttribute("query", queryResult);
+        } catch (PrestoPaySignatureException ex) {
+            log.warn("Query signature verification failed txnRefNum={} side={} message={} canonical={}",
+                    merchantTxnRef, ex.side(), ex.getMessage(), ex.canonicalString());
+            model.addAttribute("querySignatureError", true);
+            model.addAttribute("signatureSide", ex.side().name());
+            model.addAttribute("queryError", ex.getMessage());
         } catch (PrestoPayException ex) {
             log.warn("Query failed for txnRefNum={}: {}", merchantTxnRef, ex.getMessage());
             model.addAttribute("queryError", ex.getMessage());
