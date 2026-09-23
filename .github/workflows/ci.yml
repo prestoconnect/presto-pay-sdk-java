@@ -26,12 +26,12 @@ jobs:
       # Checkstyle 10 needs Java 11+ to run; the JDK 11+ jobs enforce it.
       - name: Verify (tests only)
         if: matrix.java == '8'
-        run: mvn --batch-mode verify -Dcheckstyle.skip
+        run: ./mvnw --batch-mode verify -Dcheckstyle.skip
 
       - name: Verify (tests + Checkstyle)
         if: matrix.java != '8'
-        run: mvn --batch-mode verify
+        run: ./mvnw --batch-mode verify
 
       - name: Build sources and Javadoc jars
         if: matrix.java == '17'
-        run: mvn --batch-mode verify -Prelease -DskipTests -Dcheckstyle.skip
+        run: ./mvnw --batch-mode verify -Prelease -DskipTests -Dcheckstyle.skip

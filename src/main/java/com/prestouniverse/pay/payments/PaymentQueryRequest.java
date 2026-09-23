@@ -4,6 +4,10 @@ import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/**
+ * Looks up a payment by {@code paymentRefNum} or {@code txnRefNum} ({@code /v1/ext/payment/query}). Read-only and
+ * safe to retry; the authoritative source of payment state.
+ */
 public final class PaymentQueryRequest {
 
     private final String merchantRefNum;

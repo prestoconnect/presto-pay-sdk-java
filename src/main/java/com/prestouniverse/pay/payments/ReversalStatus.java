@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.payments;
 
+/** Known reversal status values. The gateway may return values not listed here. */
 public final class ReversalStatus {
 
     public static final String REVERSING = "Reversing";

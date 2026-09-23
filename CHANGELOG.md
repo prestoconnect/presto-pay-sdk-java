@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-23
+
+First public release.
+
 ### Added
 
 - README with integration guide, error handling, and webhook contract.
@@ -24,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PaymentInitRequest.Builder.items(List)` and `allowedPaymentMethods(List)` overloads.
 - `toString()` on response types, `NotifyEvent`, `PaymentDetail`, and `RefundDetail` showing identifiers, status, and amounts only (no user refs, additional data, or card details).
 - CI runs on JDK 8, 11, 17, and 21 and builds the Javadoc jar.
+- Webhooks are rejected when their signed `ts` is more than 15 minutes from the local clock (`WebhookVerifier.DEFAULT_MAX_TIMESTAMP_AGE`); configure with `WebhookVerifier.Builder.maxTimestampAge(...)` / `disableTimestampCheck()` or `PrestoPayClient.Builder.webhookMaxTimestampAge(...)`.
+- Javadoc for all public types and packages; `SECURITY.md`.
+- Maven wrapper (Maven 3.9.9) and a tag-triggered `Release` workflow that signs and uploads to Maven Central.
 
 ### Fixed
 
@@ -51,3 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `Environment.custom(String)`; use `PrestoPayClient.Builder.baseUrl(...)`.
 - `RetryPolicy.of` throws `PrestoPayConfigException` (was `IllegalArgumentException`) and rejects a null or negative backoff.
 - Lists returned by `PaymentQueryResponse` and `NotifyEvent` are unmodifiable.
+
+[Unreleased]: https://github.com/prestouniverse/presto-pay-sdk/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/prestouniverse/presto-pay-sdk/releases/tag/v0.1.0

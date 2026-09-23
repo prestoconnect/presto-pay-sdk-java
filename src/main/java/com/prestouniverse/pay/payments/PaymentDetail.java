@@ -6,6 +6,7 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/** How (part of) a payment was paid: method, amount in minor units, and card details where applicable. */
 public final class PaymentDetail {
 
     private final String method;

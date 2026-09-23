@@ -1,5 +1,9 @@
 package com.prestouniverse.pay.exception;
 
+/**
+ * Invalid client configuration or request, detected before anything is sent. {@link #field()} names the offending
+ * setting.
+ */
 public class PrestoPayConfigException extends PrestoPayException {
 
     private static final long serialVersionUID = 1L;

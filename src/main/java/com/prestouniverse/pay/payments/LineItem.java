@@ -4,6 +4,7 @@ import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/** One line of the optional item list on {@link PaymentInitRequest}. Amounts are in minor currency units. */
 public final class LineItem {
 
     private final String itemDesc;

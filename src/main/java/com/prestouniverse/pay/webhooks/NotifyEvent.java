@@ -9,6 +9,7 @@ import com.prestouniverse.pay.payments.PaymentStatus;
 import java.util.Collections;
 import java.util.List;
 
+/** A verified notify webhook. Use {@code payments().query()} for authoritative payment state. */
 public final class NotifyEvent {
 
     private final String eventCode;

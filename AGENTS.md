@@ -12,11 +12,12 @@ Gateway behavior and wire formats are defined by the implemented client, [README
 
 | Goal | Command |
 |------|---------|
-| Default CI gate (Checkstyle + unit tests) | `mvn --batch-mode verify` |
-| Live staging smoke (credentials required) | `PRESTOPAY_STAGING_SMOKE=1` + env vars, then `mvn verify -Pstaging-smoke` |
-| Attach sources/Javadoc jars | `mvn verify -Prelease` |
+| Default CI gate (Checkstyle + unit tests) | `./mvnw --batch-mode verify` |
+| Live staging smoke (credentials required) | `PRESTOPAY_STAGING_SMOKE=1` + env vars, then `./mvnw verify -Pstaging-smoke` |
+| Attach sources/Javadoc jars | `./mvnw verify -Prelease` |
+| Publish to Maven Central | Push a `vX.Y.Z` tag; `.github/workflows/release.yml` runs `./mvnw -Prelease,central deploy` |
 
-CI (`.github/workflows/ci.yml`) runs `mvn verify` on JDK 8 (Checkstyle skipped: Checkstyle 10 needs Java 11+), 11, 17, and 21. `maven.compiler.release=8` is set only by the `jdk9-plus` profile because JDK 8 `javac` has no `--release`.
+CI (`.github/workflows/ci.yml`) runs `./mvnw verify` on JDK 8 (Checkstyle skipped: Checkstyle 10 needs Java 11+), 11, 17, and 21. `maven.compiler.release=8` is set only by the `jdk9-plus` profile because JDK 8 `javac` has no `--release`.
 
 ## Layout
 
@@ -107,7 +108,7 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 
 - Prefer **contract tests** with `support.MockGatewayServer` over live gateway calls.
 - `StagingSmokeTest` is `@Tag("staging")` — excluded unless `-Pstaging-smoke`.
-- After substantive changes, run **`mvn verify`** locally.
+- After substantive changes, run **`./mvnw verify`** locally.
 - New public behavior: add or extend tests in the matching package; avoid trivial assertions.
 
 ## Code style and constraints
@@ -138,6 +139,6 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 
 ## Out of scope unless asked
 
-- Maven Central publish pipeline (GPG, central publishing plugin)
+- Changing the Maven Central publish setup (`central` profile, `release.yml`, signing secrets)
 - `/ext/user/verify` mini-app user token flow
 - Framework-specific modules (Spring starter, Quarkus, etc.) beyond the doc example

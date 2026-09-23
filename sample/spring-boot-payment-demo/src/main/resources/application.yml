@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: "optional:classpath:application-local.yml,optional:file:./application-local.yml"
   thymeleaf:
     cache: false
 
@@ -10,14 +12,14 @@ app:
   public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
   default-currency: MYR
 
-# Staging mock merchant (11Street) — override with PRESTOPAY_* env or application-local.yml
+# Merchant credentials come from PRESTOPAY_* env vars or application-local.yml (gitignored); see sample/README.md.
 prestopay:
   environment: ${PRESTOPAY_ENV:staging}
-  mid: ${PRESTOPAY_MID:11StreetMock}
-  mrn: ${PRESTOPAY_MRN:PM181019QGJWH4K}
+  mid: ${PRESTOPAY_MID:}
+  mrn: ${PRESTOPAY_MRN:}
   keystore-path: ${PRESTOPAY_KEYSTORE_PATH:classpath:keys/presto_rm_keystore.p12}
-  keystore-password: ${PRESTOPAY_KEYSTORE_PASSWORD:123123123}
-  keystore-alias: ${PRESTOPAY_KEYSTORE_ALIAS:rm}
+  keystore-password: ${PRESTOPAY_KEYSTORE_PASSWORD:}
+  keystore-alias: ${PRESTOPAY_KEYSTORE_ALIAS:}
   public-key-path: ${PRESTOPAY_PUBLIC_KEY_PATH:classpath:keys/presto_ext_service_dev.der}
 
 logging:

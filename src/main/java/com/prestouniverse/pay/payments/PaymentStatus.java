@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.payments;
 
+/** Known payment status values. The gateway may return values not listed here. */
 public final class PaymentStatus {
 
     public static final String PENDING_AUTHORISE = "PendingAuthorise";

@@ -1,5 +1,10 @@
 package com.prestouniverse.pay.exception;
 
+/**
+ * The gateway rejected the request: an HTTP error with {@code x-http-error-code} headers ({@link
+ * #isSystemError()}), or HTTP 200 with {@code success: false}. Compare {@link #errorCode()} to {@link
+ * com.prestouniverse.pay.payments.ErrorCode}.
+ */
 public class PrestoPayApiException extends PrestoPayException {
 
     private static final long serialVersionUID = 1L;

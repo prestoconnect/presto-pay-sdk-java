@@ -11,6 +11,7 @@ Defaults in `application.yml`:
 
 - `prestopay.keystore-path`: `classpath:keys/presto_rm_keystore.p12`
 - `prestopay.public-key-path`: `classpath:keys/presto_ext_service_dev.der`
-- Password: `123123123`, alias: `rm`
+
+Set the keystore password (and alias, if the keystore holds more than one key) via `PRESTOPAY_KEYSTORE_PASSWORD` / `PRESTOPAY_KEYSTORE_ALIAS` or `application-local.yml`.
 
 `.p12` / `.der` files are gitignored; copy them from your Presto onboarding pack.

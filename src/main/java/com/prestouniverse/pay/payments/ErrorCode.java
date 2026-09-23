@@ -1,5 +1,10 @@
 package com.prestouniverse.pay.payments;
 
+/**
+ * Known gateway error codes, as returned by {@link
+ * com.prestouniverse.pay.exception.PrestoPayApiException#errorCode()}. The gateway may return codes not listed
+ * here.
+ */
 public final class ErrorCode {
 
     public static final String INVALID_REQUEST_PATH = "1001";

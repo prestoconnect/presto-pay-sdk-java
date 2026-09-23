@@ -6,6 +6,7 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/** One refund against a payment, as listed in {@link PaymentQueryResponse#refundDetails()}. */
 public final class RefundDetail {
 
     private final String refundRefNum;

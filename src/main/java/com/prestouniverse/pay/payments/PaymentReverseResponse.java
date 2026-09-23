@@ -3,6 +3,7 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/** Result of {@link PaymentsClient#reverse}. */
 public final class PaymentReverseResponse {
 
     private final String prestoMrn;

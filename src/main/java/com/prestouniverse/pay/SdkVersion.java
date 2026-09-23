@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/** SDK version, as sent in the {@code User-Agent} header. */
 public final class SdkVersion {
 
     private static final String VERSION = resolveVersion();

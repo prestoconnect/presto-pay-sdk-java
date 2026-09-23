@@ -17,7 +17,16 @@ import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Verifies Presto notify webhooks: RSA signature, {@code mid}, and timestamp freshness. Thread-safe.
+ *
+ * <p>Use {@code PrestoPayClient.webhooks()} if you already have a client; build a verifier directly for services
+ * that only receive webhooks.
+ */
 public final class WebhookVerifier {
+
+    /** Default freshness window for a webhook's signed {@code ts}. */
+    public static final Duration DEFAULT_MAX_TIMESTAMP_AGE = Duration.ofMinutes(15);
 
     private final PublicKey prestoPublicKey;
     private final String merchantId;
@@ -27,7 +36,7 @@ public final class WebhookVerifier {
     private WebhookVerifier(Builder builder) {
         this.prestoPublicKey = builder.prestoPublicKey;
         this.merchantId = builder.merchantId;
-        this.maxTimestampAge = builder.maxTimestampAge;
+        this.maxTimestampAge = builder.timestampCheckEnabled ? builder.maxTimestampAge : null;
         this.clock = builder.clock;
     }
 
@@ -35,6 +44,14 @@ public final class WebhookVerifier {
         return new Builder();
     }
 
+    /**
+     * Verifies and parses a raw webhook body. Pass the exact bytes received, decoded as UTF-8, before any
+     * framework JSON binding.
+     *
+     * @throws com.prestouniverse.pay.exception.PrestoPaySignatureException if the signature is missing or
+     *         invalid, the {@code mid} is not this merchant's, or {@code ts} is outside the freshness window
+     * @throws com.prestouniverse.pay.exception.PrestoPayResponseException if the body cannot be parsed
+     */
     public NotifyEvent parse(String rawBody) {
         JsonObject node;
         try {
@@ -103,7 +120,8 @@ public final class WebhookVerifier {
 
         private PublicKey prestoPublicKey;
         private String merchantId;
-        private Duration maxTimestampAge;
+        private Duration maxTimestampAge = DEFAULT_MAX_TIMESTAMP_AGE;
+        private boolean timestampCheckEnabled = true;
         private Clock clock = Clock.systemUTC();
 
         private Builder() {
@@ -123,8 +141,22 @@ public final class WebhookVerifier {
             return this;
         }
 
+        /**
+         * Rejects webhooks whose signed {@code ts} is further than this from now, in either direction, so a
+         * captured webhook cannot be replayed later. Defaults to {@link #DEFAULT_MAX_TIMESTAMP_AGE}.
+         */
         public Builder maxTimestampAge(Duration maxTimestampAge) {
             this.maxTimestampAge = maxTimestampAge;
+            this.timestampCheckEnabled = true;
+            return this;
+        }
+
+        /**
+         * Accepts webhooks regardless of their {@code ts}. Only use this if you deduplicate events yourself, for
+         * example by {@code eventRefNum}.
+         */
+        public Builder disableTimestampCheck() {
+            this.timestampCheckEnabled = false;
             return this;
         }
 
@@ -139,6 +171,13 @@ public final class WebhookVerifier {
             }
             if (merchantId == null || merchantId.trim().isEmpty()) {
                 throw new PrestoPayConfigException("merchantId", "merchantId is required");
+            }
+            if (timestampCheckEnabled && (maxTimestampAge == null || maxTimestampAge.isNegative()
+                    || maxTimestampAge.isZero())) {
+                throw new PrestoPayConfigException("maxTimestampAge", "maxTimestampAge must be positive");
+            }
+            if (clock == null) {
+                throw new PrestoPayConfigException("clock", "clock must not be null");
             }
             return new WebhookVerifier(this);
         }

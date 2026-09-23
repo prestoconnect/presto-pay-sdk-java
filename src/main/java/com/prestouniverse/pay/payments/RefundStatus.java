@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.payments;
 
+/** Known refund status values. The gateway may return values not listed here. */
 public final class RefundStatus {
 
     public static final String REFUNDING = "Refunding";

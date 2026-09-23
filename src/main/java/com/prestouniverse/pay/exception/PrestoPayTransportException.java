@@ -1,5 +1,9 @@
 package com.prestouniverse.pay.exception;
 
+/**
+ * Network, TLS, or timeout failure. When {@link #requestNotSent()} is {@code false} the gateway may have processed
+ * the request; reconcile {@code init}, {@code reverse}, and {@code refund} with {@code query}.
+ */
 public class PrestoPayTransportException extends PrestoPayException {
 
     private static final long serialVersionUID = 1L;

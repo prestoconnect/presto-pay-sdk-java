@@ -12,6 +12,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Starts a payment ({@code /v1/ext/payment/init}). Not idempotent: after an ambiguous failure, {@code query} by
+ * {@code txnRefNum} instead of re-sending; a duplicate {@code txnRefNum} returns {@link
+ * ErrorCode#DUPLICATE_TXN_REF_NUM}.
+ */
 public final class PaymentInitRequest {
 
     private final String merchantRefNum;

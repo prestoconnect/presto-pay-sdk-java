@@ -4,6 +4,10 @@ import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/**
+ * Reverses (voids) a payment ({@code /v1/ext/payment/reverse}). Not idempotent: after an ambiguous failure, {@code
+ * query} before retrying.
+ */
 public final class PaymentReverseRequest {
 
     private final String merchantRefNum;

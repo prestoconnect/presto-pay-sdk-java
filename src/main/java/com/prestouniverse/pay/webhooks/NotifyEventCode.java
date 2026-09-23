@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.webhooks;
 
+/** Known notify event codes for {@link NotifyEvent#eventCode()}. The gateway may send values not listed here. */
 public final class NotifyEventCode {
 
     public static final String AUTHORISED = "Authorised";

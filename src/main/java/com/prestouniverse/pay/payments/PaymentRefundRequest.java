@@ -3,6 +3,10 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/**
+ * Refunds all or part of a payment ({@code /v1/ext/payment/refund}). Not idempotent: after an ambiguous failure,
+ * {@code query} before retrying.
+ */
 public final class PaymentRefundRequest {
 
     private final String merchantRefNum;

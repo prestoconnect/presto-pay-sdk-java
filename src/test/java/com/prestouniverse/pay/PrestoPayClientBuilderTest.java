@@ -5,6 +5,7 @@ import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.internal.Canonicalization;
 import com.prestouniverse.pay.internal.JsonCodec;
+import com.prestouniverse.pay.internal.Timestamps;
 import com.prestouniverse.pay.internal.json.JsonObject;
 import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
@@ -15,6 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -176,7 +178,7 @@ class PrestoPayClientBuilderTest {
         body.put("eventTs", "20250423093000.000");
         body.put("amount", 100);
         body.put("currencyCode", "MYR");
-        body.put("ts", "20250423093000.000");
+        body.put("ts", Timestamps.now(Clock.systemUTC()));
         body.put("signature", RsaSignatureService.sign(Canonicalization.canonicalize(body), TestKeys.privateKey()));
         return JsonCodec.write(body);
     }

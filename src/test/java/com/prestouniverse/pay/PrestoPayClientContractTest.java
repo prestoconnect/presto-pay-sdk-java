@@ -557,15 +557,36 @@ class PrestoPayClientContractTest {
     }
 
     @Test
-    void staleWebhookIsRejectedWhenAReplayWindowIsConfigured() {
-        WebhookVerifier verifier = WebhookVerifier.builder()
+    void staleWebhookIsRejectedByDefault() {
+        String stale = signedWebhook(MID, Timestamps.now(Clock.offset(Clock.systemUTC(), Duration.ofMinutes(-16))));
+
+        assertThrows(PrestoPaySignatureException.class, () -> verifier().parse(stale));
+        assertThrows(PrestoPaySignatureException.class, () -> client.webhooks().parse(stale));
+    }
+
+    @Test
+    void replayWindowCanBeWidenedOnTheClientOrDisabledOnTheVerifier() {
+        String stale = signedWebhook(MID, Timestamps.now(Clock.offset(Clock.systemUTC(), Duration.ofMinutes(-16))));
+        PrestoPayClient tolerant = PrestoPayClient.builder()
+                .baseUrl(mockGateway.baseUrl())
+                .merchantId(MID)
+                .privateKey(TestKeys.privateKey())
+                .prestoPublicKey(TestKeys.publicKey())
+                .webhookMaxTimestampAge(Duration.ofMinutes(30))
+                .build();
+        WebhookVerifier unchecked = WebhookVerifier.builder()
                 .prestoPublicKey(TestKeys.publicKey())
                 .merchantId(MID)
-                .maxTimestampAge(Duration.ofMinutes(15))
+                .disableTimestampCheck()
                 .build();
 
-        assertThrows(PrestoPaySignatureException.class,
-                () -> verifier.parse(signedWebhook(MID, "20250423093000.000")));
+        assertEquals(MID, tolerant.webhooks().parse(stale).mid());
+        assertEquals(MID, unchecked.parse(stale).mid());
+        assertEquals("maxTimestampAge", assertThrows(PrestoPayConfigException.class, () -> WebhookVerifier.builder()
+                .prestoPublicKey(TestKeys.publicKey())
+                .merchantId(MID)
+                .maxTimestampAge(Duration.ZERO)
+                .build()).field());
     }
 
     @Test

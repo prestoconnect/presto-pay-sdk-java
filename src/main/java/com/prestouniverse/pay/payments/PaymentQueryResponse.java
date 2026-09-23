@@ -6,6 +6,7 @@ import com.prestouniverse.pay.internal.json.JsonObject;
 import java.util.Collections;
 import java.util.List;
 
+/** Current state of a payment, including reversal and refund details. Result of {@link PaymentsClient#query}. */
 public final class PaymentQueryResponse {
 
     private final String prestoMrn;

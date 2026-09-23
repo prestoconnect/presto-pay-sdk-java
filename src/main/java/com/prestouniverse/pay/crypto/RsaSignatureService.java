@@ -7,6 +7,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.util.Base64;
 
+/** SHA256withRSA signing and verification over a canonical string, Base64-encoded as the gateway expects. */
 public final class RsaSignatureService {
 
     private static final String ALGORITHM = "SHA256withRSA";

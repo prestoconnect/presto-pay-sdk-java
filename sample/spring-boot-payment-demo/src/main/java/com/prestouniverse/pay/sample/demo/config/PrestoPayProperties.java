@@ -8,16 +8,20 @@ public class PrestoPayProperties {
     /** {@code staging} or {@code production}. */
     private String environment = "staging";
 
-    private String mid = "11StreetMock";
+    /** Merchant {@code mid} from your Presto onboarding pack. Required. */
+    private String mid;
 
-    private String mrn = "PM181019QGJWH4K";
+    /** {@code prestoMrn} sent on each request. Required. */
+    private String mrn;
 
     /** Partner PKCS#12 for request signing ({@code classpath:keys/...} or filesystem path). */
     private String keystorePath = "classpath:keys/presto_rm_keystore.p12";
 
-    private String keystorePassword = "123123123";
+    /** Required. */
+    private String keystorePassword;
 
-    private String keystoreAlias = "rm";
+    /** Optional when the keystore holds a single private key. */
+    private String keystoreAlias;
 
     /** Presto X.509 public key (DER) for response and webhook verification. */
     private String publicKeyPath = "classpath:keys/presto_ext_service_dev.der";

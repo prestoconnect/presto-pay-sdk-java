@@ -1,5 +1,9 @@
 package com.prestouniverse.pay.payments;
 
+/**
+ * Known payment method codes for {@link PaymentInitRequest.Builder#allowedPaymentMethods(String...)} and {@link
+ * PaymentDetail#method()}. The gateway may return values not listed here.
+ */
 public final class PaymentMethod {
 
     public static final String WALLET = "Wallet";

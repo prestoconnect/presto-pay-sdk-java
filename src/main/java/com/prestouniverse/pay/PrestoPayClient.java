@@ -125,6 +125,7 @@ public final class PrestoPayClient {
         private RetryPolicy retryPolicy = RetryPolicy.defaults();
         private Clock clock = Clock.systemUTC();
         private String merchantId;
+        private Duration webhookMaxTimestampAge = WebhookVerifier.DEFAULT_MAX_TIMESTAMP_AGE;
 
         private Builder() {
         }
@@ -183,6 +184,15 @@ public final class PrestoPayClient {
             return this;
         }
 
+        /**
+         * Freshness window for {@code webhooks().parse}; defaults to
+         * {@link WebhookVerifier#DEFAULT_MAX_TIMESTAMP_AGE}.
+         */
+        public Builder webhookMaxTimestampAge(Duration webhookMaxTimestampAge) {
+            this.webhookMaxTimestampAge = webhookMaxTimestampAge;
+            return this;
+        }
+
         public PrestoPayClient build() {
             String resolvedBaseUrl = resolveBaseUrl();
             if (merchantId == null || merchantId.trim().isEmpty()) {
@@ -211,6 +221,8 @@ public final class PrestoPayClient {
             WebhookVerifier verifier = WebhookVerifier.builder()
                     .prestoPublicKey(prestoPublicKey)
                     .merchantId(merchantId)
+                    .maxTimestampAge(webhookMaxTimestampAge)
+                    .clock(clock)
                     .build();
             WebhooksClient webhooks = new WebhooksClient(verifier);
 

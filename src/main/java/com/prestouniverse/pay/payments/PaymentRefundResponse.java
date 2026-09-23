@@ -3,6 +3,7 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/** Result of {@link PaymentsClient#refund}. */
 public final class PaymentRefundResponse {
 
     private final String prestoMrn;

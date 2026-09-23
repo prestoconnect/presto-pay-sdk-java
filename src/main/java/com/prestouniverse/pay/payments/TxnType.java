@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.payments;
 
+/** Known transaction types for {@link PaymentInitRequest.Builder#txnType(String)}. */
 public final class TxnType {
 
     public static final String QR_PAY = "QrPay";

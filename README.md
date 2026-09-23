@@ -6,17 +6,17 @@ Standalone, framework-agnostic Java library for the Presto Connect payment gatew
 - **Zero runtime dependencies** (JUnit is test-only)
 - **Thread-safe** `PrestoPayClient` — build once, share across threads
 
-Maven coordinates (when published):
+Maven:
 
 ```xml
 <dependency>
   <groupId>com.prestouniverse</groupId>
   <artifactId>presto-pay-sdk</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
-Until the artifact is on Maven Central, install locally with `mvn install`.
+Gradle: `implementation("com.prestouniverse:presto-pay-sdk:0.1.0")`
 
 ## Quick start
 
@@ -91,8 +91,7 @@ Presto POSTs JSON to your `notifyUrl` from its infrastructure — the URL must b
 WebhookVerifier verifier = WebhookVerifier.builder()
     .prestoPublicKey(prestoPublicKey)
     .merchantId("YOUR_MID")                   // required; rejects events signed for other merchants
-    .maxTimestampAge(Duration.ofMinutes(15))  // optional replay window
-    .build();
+    .build();                                 // rejects events whose ts is more than 15 minutes off
 
 NotifyEvent event = verifier.parse(rawRequestBody);
 String suggestedStatus = event.paymentStatus(); // Authorised uses success; others map to PaymentStatus
@@ -100,6 +99,8 @@ String suggestedStatus = event.paymentStatus(); // Authorised uses success; othe
 ```
 
 If you already have a `PrestoPayClient`, `client.webhooks().parse(rawBody)` uses the same Presto public key and only accepts events for the client's `merchantId`. Presto signs webhooks for every partner with the same key, so without this check a genuine event for another merchant would verify.
+
+Both reject a webhook whose signed `ts` is more than 15 minutes from the local clock, so a captured webhook cannot be replayed later. Keep the host clock in sync (NTP). Adjust the window with `WebhookVerifier.Builder.maxTimestampAge(...)` or `PrestoPayClient.Builder.webhookMaxTimestampAge(...)`; `WebhookVerifier.Builder.disableTimestampCheck()` turns it off, but then you must deduplicate events yourself (for example by `eventRefNum`).
 
 Reject webhooks that throw `PrestoPaySignatureException` (for example HTTP 401) or `PrestoPayResponseException` (for example HTTP 400) rather than letting them surface as a 500.
 
@@ -140,19 +141,28 @@ Use `Canonicalizer.canonicalizeJson(jsonString)` to reproduce the gateway canoni
 
 ## Building and testing
 
+The Maven wrapper pins Maven 3.9.9 (use `mvnw.cmd` on Windows):
+
 ```bash
-mvn verify
+./mvnw verify
 ```
 
 Optional live staging smoke (requires real staging credentials):
 
 ```bash
 export PRESTOPAY_STAGING_SMOKE=1
-# plus PRESTOPAY_ENV, keystore, and public key variables
-mvn verify -Pstaging-smoke
+# plus PRESTOPAY_ENV, PRESTOPAY_MID, PRESTOPAY_MRN, keystore, and public key variables
+./mvnw verify -Pstaging-smoke
 ```
 
-Release artifacts (sources + Javadoc): `mvn verify -Prelease`.
+Release artifacts (sources + Javadoc): `./mvnw verify -Prelease`.
+
+### Releasing
+
+1. Set `<version>` in `pom.xml` (no `-SNAPSHOT`) and move the CHANGELOG `Unreleased` entries under that version.
+2. Commit, then push a matching tag, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
+3. The `Release` workflow verifies, signs, and uploads to the Maven Central Portal. The deployment waits there until someone clicks **Publish** (set `central.autoPublish=true` to skip that).
+4. Bump `pom.xml` to the next `-SNAPSHOT` version.
 
 ## Spring wiring
 

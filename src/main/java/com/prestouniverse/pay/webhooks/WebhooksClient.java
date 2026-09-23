@@ -1,5 +1,6 @@
 package com.prestouniverse.pay.webhooks;
 
+/** Verifies webhooks for the client's merchant. Obtain from {@code PrestoPayClient.webhooks()}; thread-safe. */
 public final class WebhooksClient {
 
     private final WebhookVerifier verifier;

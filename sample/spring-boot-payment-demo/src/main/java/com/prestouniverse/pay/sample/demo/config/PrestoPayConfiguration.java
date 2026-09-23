@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 @Configuration
 public class PrestoPayConfiguration {
@@ -20,6 +21,10 @@ public class PrestoPayConfiguration {
             log.info("Creating PrestoPayClient from PRESTOPAY_* environment variables");
             client = PrestoPayClient.fromEnv();
         } else {
+            requireSetting("prestopay.mid", "PRESTOPAY_MID", properties.getMid());
+            requireSetting("prestopay.mrn", "PRESTOPAY_MRN", properties.getMrn());
+            requireSetting("prestopay.keystore-password", "PRESTOPAY_KEYSTORE_PASSWORD",
+                    properties.getKeystorePassword());
             log.info("Creating PrestoPayClient from application config: env={} mid={} prestoMrn={} "
                             + "keystore={} publicKey={} keystoreAlias={}",
                     properties.getEnvironment(),
@@ -34,7 +39,7 @@ public class PrestoPayConfiguration {
                     .privateKey(ClasspathKeyResources.privateKeyFromPkcs12(
                             properties.getKeystorePath(),
                             properties.getKeystorePassword().toCharArray(),
-                            properties.getKeystoreAlias()))
+                            StringUtils.hasText(properties.getKeystoreAlias()) ? properties.getKeystoreAlias() : null))
                     .prestoPublicKey(ClasspathKeyResources.publicKeyFromX509(properties.getPublicKeyPath()))
                     .build();
         }
@@ -49,6 +54,13 @@ public class PrestoPayConfiguration {
                 && System.getenv("PRESTOPAY_KEYSTORE_PATH") != null
                 && System.getenv("PRESTOPAY_KEYSTORE_PASSWORD") != null
                 && System.getenv("PRESTOPAY_PUBLIC_KEY_PATH") != null;
+    }
+
+    private static void requireSetting(String property, String envVar, String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new PrestoPayConfigException(property,
+                    property + " is not set: export " + envVar + " or add it to application-local.yml");
+        }
     }
 
     private static Environment parseEnvironment(String name) {

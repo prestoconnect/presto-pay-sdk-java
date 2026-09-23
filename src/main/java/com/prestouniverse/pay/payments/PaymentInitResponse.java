@@ -3,6 +3,7 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
+/** Result of {@link PaymentsClient#init}. For WebPay, send the payer to {@link #paymentUrl()}. */
 public final class PaymentInitResponse {
 
     private final String prestoMrn;
