@@ -1,0 +1,19 @@
+---
+description: Presto Pay SDK — Java 8 zero-deps library; API boundaries and verify gate
+alwaysApply: true
+---
+
+# presto-pay-sdk
+
+Read [AGENTS.md](AGENTS.md) for full context before non-trivial edits.
+
+**Hard constraints**
+
+- Java 8 only; **no runtime Maven dependencies** (JUnit test scope only).
+- Public API: `com.prestouniverse.pay` except **`internal`** — never expose internal types to integrators.
+- Payment wire codes: **`String` constants** in holder classes (`PaymentStatus`, `PaymentMethod`, `TxnType`, `ErrorCode`); responses use `String`, not Java enums.
+- Operations named `*Request`; package-private `toJson`/`fromJson` on payment DTOs.
+- **`mvn verify`** must pass (Checkstyle + tests) before finishing work.
+- Preserve init/reverse/refund idempotency: retry only when transport reports `requestNotSent()`; document duplicate `txnRefNum` / use `query` for reconciliation.
+
+**Contract changes:** align with README and contract tests; update CHANGELOG when behavior is user-visible.
