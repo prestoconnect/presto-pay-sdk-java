@@ -9,6 +9,7 @@ import com.prestouniverse.pay.internal.Timestamps;
 import com.prestouniverse.pay.internal.json.JsonObject;
 import com.prestouniverse.pay.payments.PaymentInitRequest;
 import com.prestouniverse.pay.payments.PaymentInitResponse;
+import com.prestouniverse.pay.payments.PaymentMethod;
 import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.payments.PaymentRefundRequest;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -160,8 +162,33 @@ class PrestoPayClientContractTest {
 
         assertEquals(PaymentStatus.AUTHORISED, response.paymentStatus());
         assertEquals(1, response.paymentDetails().size());
-        assertEquals("Wallet", response.paymentDetails().get(0).method().value());
+        assertEquals(PaymentMethod.WALLET, response.paymentDetails().get(0).method());
         assertTrue(response.refundDetails().isEmpty());
+    }
+
+    @Test
+    void queryPaymentDetailMayOmitMethod() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("prestoMrn", MRN);
+            response.put("paymentRefNum", "PP250423ND56NHO");
+            response.put("txnRefNum", "TXN10001");
+            response.put("paymentStatus", "Authorised");
+            response.put("amount", 1200);
+            response.put("currencyCode", "MYR");
+            response.put("paymentRequestDate", "20250423104500.000");
+            response.put("paymentFinalisedDate", "20250423105020.000");
+            response.put("refundDetails", "[]");
+            response.put("paymentDetails", "[{\"amount\":1200}]");
+            response.put("ts", "20250423105030.000");
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        PaymentQueryResponse response = client.payments().query(
+                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
+
+        assertNull(response.paymentDetails().get(0).method());
     }
 
     @Test

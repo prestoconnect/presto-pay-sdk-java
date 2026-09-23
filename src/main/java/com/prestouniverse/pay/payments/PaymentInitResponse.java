@@ -8,7 +8,7 @@ public final class PaymentInitResponse {
     private final String prestoMrn;
     private final String paymentRefNum;
     private final String txnRefNum;
-    private final PaymentStatus paymentStatus;
+    private final String paymentStatus;
     private final String paymentUrl;
     private final String userRefNum;
     private final int amount;
@@ -18,9 +18,9 @@ public final class PaymentInitResponse {
     private final String additionalData;
     private final String ts;
 
-    private PaymentInitResponse(String prestoMrn, String paymentRefNum, String txnRefNum,
-            PaymentStatus paymentStatus, String paymentUrl, String userRefNum, int amount, String currencyCode,
-            String paymentRequestDate, String paymentFinalisedDate, String additionalData, String ts) {
+    private PaymentInitResponse(String prestoMrn, String paymentRefNum, String txnRefNum, String paymentStatus,
+            String paymentUrl, String userRefNum, int amount, String currencyCode, String paymentRequestDate,
+            String paymentFinalisedDate, String additionalData, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
         this.txnRefNum = txnRefNum;
@@ -40,7 +40,7 @@ public final class PaymentInitResponse {
                 JsonCodec.requiredText(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
                 JsonCodec.requiredText(node, "txnRefNum"),
-                PaymentStatus.of(JsonCodec.requiredText(node, "paymentStatus")),
+                JsonCodec.requiredText(node, "paymentStatus"),
                 JsonCodec.text(node, "paymentUrl"),
                 JsonCodec.text(node, "userRefNum"),
                 JsonCodec.requiredInt(node, "amount"),
@@ -63,7 +63,7 @@ public final class PaymentInitResponse {
         return txnRefNum;
     }
 
-    public PaymentStatus paymentStatus() {
+    public String paymentStatus() {
         return paymentStatus;
     }
 

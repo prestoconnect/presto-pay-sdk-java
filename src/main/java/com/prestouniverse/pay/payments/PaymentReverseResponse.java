@@ -10,11 +10,11 @@ public final class PaymentReverseResponse {
     private final String prestoReversalRefNum;
     private final int amount;
     private final String currencyCode;
-    private final PaymentStatus paymentStatus;
+    private final String paymentStatus;
     private final String ts;
 
     private PaymentReverseResponse(String prestoMrn, String paymentRefNum, String prestoReversalRefNum, int amount,
-            String currencyCode, PaymentStatus paymentStatus, String ts) {
+            String currencyCode, String paymentStatus, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
         this.prestoReversalRefNum = prestoReversalRefNum;
@@ -26,14 +26,13 @@ public final class PaymentReverseResponse {
 
     static PaymentReverseResponse fromJson(JsonObject node) {
         Integer amount = JsonCodec.optInt(node, "amount");
-        String status = JsonCodec.text(node, "paymentStatus");
         return new PaymentReverseResponse(
                 JsonCodec.text(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
                 JsonCodec.text(node, "prestoReversalRefNum"),
                 amount != null ? amount : 0,
                 JsonCodec.text(node, "currencyCode"),
-                status != null ? PaymentStatus.of(status) : null,
+                JsonCodec.text(node, "paymentStatus"),
                 JsonCodec.text(node, "ts"));
     }
 
@@ -57,7 +56,7 @@ public final class PaymentReverseResponse {
         return currencyCode;
     }
 
-    public PaymentStatus paymentStatus() {
+    public String paymentStatus() {
         return paymentStatus;
     }
 

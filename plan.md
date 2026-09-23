@@ -214,7 +214,7 @@ presto-pay-sdk/
     │   ├── PaymentQueryRequest.java   PaymentQueryResponse.java   (by paymentRefNum or txnRefNum)
     │   ├── PaymentReverseRequest.java PaymentReverseResponse.java
     │   ├── PaymentRefundRequest.java  PaymentRefundResponse.java
-    │   ├── TxnType.java              open enum: QrPay / WebPay / MiniAppPay
+    │   ├── TxnType.java              constants: QrPay / WebPay / MiniAppPay
     │   ├── PaymentStatus.java        open enum: PendingAuthorise / Cancelled / Authorised / Failed / PendingReverse /
     │   │                                        Reversed / PendingRefund / PartialRefunded / Refunded / Expired
     │   ├── RefundStatus.java         open enum: Refunding / Failed / Success
@@ -300,8 +300,7 @@ PaymentQueryResponse status = client.payments().query(
     PaymentQueryRequest.builder().paymentRefNum(paymentRefNum).build());
 PaymentQueryResponse status = client.payments().query(
     PaymentQueryRequest.builder().txnRefNum(orderRefNum).build());
-if (status.paymentStatus().equals(PaymentStatus.AUTHORISED)) { ... }
-status.paymentStatus().isKnown();                     // false for a code this SDK version doesn't list
+if (PaymentStatus.AUTHORISED.equals(status.paymentStatus())) { ... }
 List<PaymentDetail> methods = status.paymentDetails(); // parsed from the JSON string, lazily
 List<RefundDetail> refunds = status.refundDetails();
 

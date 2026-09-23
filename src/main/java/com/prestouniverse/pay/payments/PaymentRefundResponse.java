@@ -11,12 +11,12 @@ public final class PaymentRefundResponse {
     private final int amount;
     private final int refundAmount;
     private final String currencyCode;
-    private final PaymentStatus paymentStatus;
+    private final String paymentStatus;
     private final String refundedDate;
     private final String ts;
 
     private PaymentRefundResponse(String prestoMrn, String paymentRefNum, String prestoRefundRefNum, int amount,
-            int refundAmount, String currencyCode, PaymentStatus paymentStatus, String refundedDate, String ts) {
+            int refundAmount, String currencyCode, String paymentStatus, String refundedDate, String ts) {
         this.prestoMrn = prestoMrn;
         this.paymentRefNum = paymentRefNum;
         this.prestoRefundRefNum = prestoRefundRefNum;
@@ -31,7 +31,6 @@ public final class PaymentRefundResponse {
     static PaymentRefundResponse fromJson(JsonObject node) {
         Integer amount = JsonCodec.optInt(node, "amount");
         Integer refundAmount = JsonCodec.optInt(node, "refundAmount");
-        String status = JsonCodec.text(node, "paymentStatus");
         return new PaymentRefundResponse(
                 JsonCodec.text(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),
@@ -39,7 +38,7 @@ public final class PaymentRefundResponse {
                 amount != null ? amount : 0,
                 refundAmount != null ? refundAmount : 0,
                 JsonCodec.text(node, "currencyCode"),
-                status != null ? PaymentStatus.of(status) : null,
+                JsonCodec.text(node, "paymentStatus"),
                 JsonCodec.text(node, "refundedDate"),
                 JsonCodec.text(node, "ts"));
     }
@@ -68,7 +67,7 @@ public final class PaymentRefundResponse {
         return currencyCode;
     }
 
-    public PaymentStatus paymentStatus() {
+    public String paymentStatus() {
         return paymentStatus;
     }
 

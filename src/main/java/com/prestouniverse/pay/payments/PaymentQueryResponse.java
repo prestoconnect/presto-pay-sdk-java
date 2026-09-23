@@ -11,18 +11,18 @@ public final class PaymentQueryResponse {
     private final String paymentRefNum;
     private final String txnRefNum;
     private final String userRefNum;
-    private final PaymentStatus paymentStatus;
+    private final String paymentStatus;
     private final int amount;
     private final String currencyCode;
     private final String paymentRequestDate;
     private final String paymentFinalisedDate;
     private final String reversalRefNum;
     private final String prestoReversalRefNum;
-    private final ReversalStatus reversalStatus;
+    private final String reversalStatus;
     private final String reversalDate;
     private final String refundRefNum;
     private final String prestoRefundRefNum;
-    private final RefundStatus refundStatus;
+    private final String refundStatus;
     private final String refundRequestDate;
     private final String refundFinalisedDate;
     private final String additionalData;
@@ -61,8 +61,7 @@ public final class PaymentQueryResponse {
         builder.paymentRefNum = JsonCodec.requiredText(node, "paymentRefNum");
         builder.txnRefNum = JsonCodec.text(node, "txnRefNum");
         builder.userRefNum = JsonCodec.text(node, "userRefNum");
-        String status = JsonCodec.text(node, "paymentStatus");
-        builder.paymentStatus = status != null ? PaymentStatus.of(status) : null;
+        builder.paymentStatus = JsonCodec.text(node, "paymentStatus");
         Integer amount = JsonCodec.optInt(node, "amount");
         builder.amount = amount != null ? amount : 0;
         builder.currencyCode = JsonCodec.text(node, "currencyCode");
@@ -70,13 +69,11 @@ public final class PaymentQueryResponse {
         builder.paymentFinalisedDate = JsonCodec.text(node, "paymentFinalisedDate");
         builder.reversalRefNum = JsonCodec.text(node, "reversalRefNum");
         builder.prestoReversalRefNum = JsonCodec.text(node, "prestoReversalRefNum");
-        String reversalStatus = JsonCodec.text(node, "reversalStatus");
-        builder.reversalStatus = reversalStatus != null ? ReversalStatus.of(reversalStatus) : null;
+        builder.reversalStatus = JsonCodec.text(node, "reversalStatus");
         builder.reversalDate = JsonCodec.text(node, "reversalDate");
         builder.refundRefNum = JsonCodec.text(node, "refundRefNum");
         builder.prestoRefundRefNum = JsonCodec.text(node, "prestoRefundRefNum");
-        String refundStatus = JsonCodec.text(node, "refundStatus");
-        builder.refundStatus = refundStatus != null ? RefundStatus.of(refundStatus) : null;
+        builder.refundStatus = JsonCodec.text(node, "refundStatus");
         builder.refundRequestDate = JsonCodec.text(node, "refundRequestDate");
         builder.refundFinalisedDate = JsonCodec.text(node, "refundFinalisedDate");
         builder.additionalData = JsonCodec.text(node, "additionalData");
@@ -104,7 +101,7 @@ public final class PaymentQueryResponse {
         return userRefNum;
     }
 
-    public PaymentStatus paymentStatus() {
+    public String paymentStatus() {
         return paymentStatus;
     }
 
@@ -132,7 +129,7 @@ public final class PaymentQueryResponse {
         return prestoReversalRefNum;
     }
 
-    public ReversalStatus reversalStatus() {
+    public String reversalStatus() {
         return reversalStatus;
     }
 
@@ -148,7 +145,7 @@ public final class PaymentQueryResponse {
         return prestoRefundRefNum;
     }
 
-    public RefundStatus refundStatus() {
+    public String refundStatus() {
         return refundStatus;
     }
 
@@ -181,18 +178,18 @@ public final class PaymentQueryResponse {
         private String paymentRefNum;
         private String txnRefNum;
         private String userRefNum;
-        private PaymentStatus paymentStatus;
+        private String paymentStatus;
         private int amount;
         private String currencyCode;
         private String paymentRequestDate;
         private String paymentFinalisedDate;
         private String reversalRefNum;
         private String prestoReversalRefNum;
-        private ReversalStatus reversalStatus;
+        private String reversalStatus;
         private String reversalDate;
         private String refundRefNum;
         private String prestoRefundRefNum;
-        private RefundStatus refundStatus;
+        private String refundStatus;
         private String refundRequestDate;
         private String refundFinalisedDate;
         private String additionalData;

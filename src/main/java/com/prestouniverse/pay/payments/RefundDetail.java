@@ -10,11 +10,11 @@ public final class RefundDetail {
 
     private final String refundRefNum;
     private final String prestoRefundRefNum;
-    private final RefundStatus refundStatus;
+    private final String refundStatus;
     private final String refundRequestDate;
     private final String refundFinalisedDate;
 
-    private RefundDetail(String refundRefNum, String prestoRefundRefNum, RefundStatus refundStatus,
+    private RefundDetail(String refundRefNum, String prestoRefundRefNum, String refundStatus,
             String refundRequestDate, String refundFinalisedDate) {
         this.refundRefNum = refundRefNum;
         this.prestoRefundRefNum = prestoRefundRefNum;
@@ -35,7 +35,7 @@ public final class RefundDetail {
         return new RefundDetail(
                 JsonCodec.requiredText(node, "refundRefNum"),
                 JsonCodec.requiredText(node, "prestoRefundRefNum"),
-                RefundStatus.of(JsonCodec.requiredText(node, "refundStatus")),
+                JsonCodec.requiredText(node, "refundStatus"),
                 JsonCodec.requiredText(node, "refundRequestDate"),
                 JsonCodec.text(node, "refundFinalisedDate"));
     }
@@ -48,7 +48,7 @@ public final class RefundDetail {
         return prestoRefundRefNum;
     }
 
-    public RefundStatus refundStatus() {
+    public String refundStatus() {
         return refundStatus;
     }
 

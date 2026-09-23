@@ -31,7 +31,7 @@ PrestoPayClient client = PrestoPayClient.builder()
     .build();
 
 PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
-    .txnType(TxnType.WEB_PAY)
+    .txnType(TxnType.WEB_PAY)  // or any gateway string
     .txnRefNum("order-123")
     .displayDesc("Order 123")
     .amount(10_000)

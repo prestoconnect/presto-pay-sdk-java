@@ -8,13 +8,13 @@ import java.util.List;
 
 public final class PaymentDetail {
 
-    private final PaymentMethod method;
+    private final String method;
     private final int amount;
     private final String cardBin;
     private final String cardSummary;
     private final String cardType;
 
-    private PaymentDetail(PaymentMethod method, int amount, String cardBin, String cardSummary, String cardType) {
+    private PaymentDetail(String method, int amount, String cardBin, String cardSummary, String cardType) {
         this.method = method;
         this.amount = amount;
         this.cardBin = cardBin;
@@ -32,14 +32,14 @@ public final class PaymentDetail {
 
     private static PaymentDetail fromJson(JsonObject node) {
         return new PaymentDetail(
-                PaymentMethod.of(JsonCodec.requiredText(node, "method")),
+                JsonCodec.text(node, "method"),
                 JsonCodec.requiredInt(node, "amount"),
                 JsonCodec.text(node, "cardBin"),
                 JsonCodec.text(node, "cardSummary"),
                 JsonCodec.text(node, "cardType"));
     }
 
-    public PaymentMethod method() {
+    public String method() {
         return method;
     }
 

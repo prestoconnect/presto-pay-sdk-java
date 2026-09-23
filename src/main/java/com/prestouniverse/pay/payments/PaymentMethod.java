@@ -1,109 +1,56 @@
 package com.prestouniverse.pay.payments;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-
 public final class PaymentMethod {
 
-    public static final PaymentMethod WALLET = new PaymentMethod("Wallet", true);
-    public static final PaymentMethod CASH_BACK = new PaymentMethod("CashBack", true);
-    public static final PaymentMethod CARD = new PaymentMethod("Card", true);
-    public static final PaymentMethod BIG_LIFE = new PaymentMethod("BigLife", true);
-    public static final PaymentMethod BONUS_LINK = new PaymentMethod("BonusLink", true);
-    public static final PaymentMethod RISE = new PaymentMethod("RISE", true);
-    public static final PaymentMethod SUBWALLET_BUDDY = new PaymentMethod("Subwallet_BUDDY", true);
-    public static final PaymentMethod PM_PG_CARD = new PaymentMethod("PmPgCard", true);
-    public static final PaymentMethod MAYBANK = new PaymentMethod("Maybank", true);
-    public static final PaymentMethod AMBANK = new PaymentMethod("Ambank", true);
-    public static final PaymentMethod RHB = new PaymentMethod("Rhb", true);
-    public static final PaymentMethod HONG_LEONG = new PaymentMethod("HongLeong", true);
-    public static final PaymentMethod CIMB = new PaymentMethod("Cimb", true);
-    public static final PaymentMethod PUBLIC_BANK = new PaymentMethod("PublicBank", true);
-    public static final PaymentMethod AFFIN_BANK = new PaymentMethod("AffinBank", true);
-    public static final PaymentMethod BSN = new PaymentMethod("Bsn", true);
-    public static final PaymentMethod HONG_LEONG_PEX = new PaymentMethod("HongLeongPex", true);
-    public static final PaymentMethod UNION_PAY = new PaymentMethod("UnionPay", true);
-    public static final PaymentMethod BOOST = new PaymentMethod("Boost", true);
-    public static final PaymentMethod GRAB_PAY = new PaymentMethod("GrabPay", true);
-    public static final PaymentMethod TOUCH_N_GO = new PaymentMethod("TouchNGo", true);
-    public static final PaymentMethod TOUCH_N_GO_EWALLET = new PaymentMethod("TouchNGoEWallet", true);
-    public static final PaymentMethod ALIPAY_CHINA = new PaymentMethod("AliPayChina", true);
-    public static final PaymentMethod LATITUDE_PAY = new PaymentMethod("LatitudePay", true);
+    public static final String WALLET = "Wallet";
+    public static final String CASH_BACK = "CashBack";
+    public static final String CARD = "Card";
+    public static final String BIG_LIFE = "BigLife";
+    public static final String BONUS_LINK = "BonusLink";
+    public static final String RISE = "RISE";
+    public static final String PLUS_MILES = "PlusMiles";
+    public static final String V_SING = "VSing";
+    public static final String KLEAN = "KLEAN";
+    public static final String GO_REWARDS = "GOrewards";
+    public static final String SUBWALLET_NEAR_U = "Subwallet_NearU";
+    public static final String SUBWALLET_CARROTS = "Subwallet_CARROTS";
+    public static final String SUBWALLET_BUDDY = "Subwallet_BUDDY";
+    public static final String TUNE_TALK = "TuneTalk";
+    public static final String PM_PG_CARD = "PmPgCard";
+    public static final String MAYBANK = "Maybank";
+    public static final String AMBANK = "Ambank";
+    public static final String RHB = "Rhb";
+    public static final String HONG_LEONG = "HongLeong";
+    public static final String CIMB = "Cimb";
+    public static final String PUBLIC_BANK = "PublicBank";
+    public static final String AFFIN_BANK = "AffinBank";
+    public static final String BSN = "Bsn";
+    public static final String ALLIANCE_BANK = "AllianceBank";
+    public static final String AGRO_BANK = "AgroBank";
+    public static final String BANK_ISLAM = "BankIslam";
+    public static final String BANK_OF_CHINA = "BankOfChina";
+    public static final String BANK_RAKYAT = "BankRakyat";
+    public static final String BANK_MUAMALAT = "BankMuamalat";
+    public static final String BOOST_BANK = "BoostBank";
+    public static final String HSBC_BANK = "HsbcBank";
+    public static final String KUWAIT_FINANCE_HOUSE = "KuwaitFinanceHouse";
+    public static final String OCBC_BANK = "OcbcBank";
+    public static final String AL_RAJHI_BANK = "AlRajhiBank";
+    public static final String STANDARD_CHARTERED = "StandardChartered";
+    public static final String UOB_BANK = "UobBank";
+    public static final String MBSB_BANK = "MbsbBank";
+    public static final String HONG_LEONG_PEX = "HongLeongPex";
+    public static final String UNION_PAY = "UnionPay";
+    public static final String UNION_PAY_QR = "UnionPayQR";
+    public static final String BOOST = "Boost";
+    public static final String GRAB_PAY = "GrabPay";
+    public static final String GRAB_PAY_LATER = "GrabPayLater";
+    public static final String WE_CHAT_PAY_CHINA = "WeChatPayChina";
+    public static final String TOUCH_N_GO = "TouchNGo";
+    public static final String TOUCH_N_GO_E_WALLET = "TouchNGoEWallet";
+    public static final String ALI_PAY_CHINA = "AliPayChina";
+    public static final String LATITUDE_PAY = "LatitudePay";
 
-    private static final Map<String, PaymentMethod> KNOWN = new LinkedHashMap<>();
-
-    static {
-        register(WALLET);
-        register(CASH_BACK);
-        register(CARD);
-        register(BIG_LIFE);
-        register(BONUS_LINK);
-        register(RISE);
-        register(SUBWALLET_BUDDY);
-        register(PM_PG_CARD);
-        register(MAYBANK);
-        register(AMBANK);
-        register(RHB);
-        register(HONG_LEONG);
-        register(CIMB);
-        register(PUBLIC_BANK);
-        register(AFFIN_BANK);
-        register(BSN);
-        register(HONG_LEONG_PEX);
-        register(UNION_PAY);
-        register(BOOST);
-        register(GRAB_PAY);
-        register(TOUCH_N_GO);
-        register(TOUCH_N_GO_EWALLET);
-        register(ALIPAY_CHINA);
-        register(LATITUDE_PAY);
-    }
-
-    private final String value;
-    private final boolean known;
-
-    private PaymentMethod(String value, boolean known) {
-        this.value = value;
-        this.known = known;
-    }
-
-    private static void register(PaymentMethod method) {
-        KNOWN.put(method.value, method);
-    }
-
-    public static PaymentMethod of(String value) {
-        Objects.requireNonNull(value, "value");
-        PaymentMethod match = KNOWN.get(value);
-        return match != null ? match : new PaymentMethod(value, false);
-    }
-
-    public String value() {
-        return value;
-    }
-
-    public boolean isKnown() {
-        return known;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof PaymentMethod)) {
-            return false;
-        }
-        return value.equals(((PaymentMethod) obj).value);
-    }
-
-    @Override
-    public int hashCode() {
-        return value.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return value;
+    private PaymentMethod() {
     }
 }

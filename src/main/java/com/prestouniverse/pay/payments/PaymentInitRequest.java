@@ -19,7 +19,7 @@ public final class PaymentInitRequest {
     private final String payerRefNum;
     private final String deviceRefNum;
     private final String deviceIp;
-    private final TxnType txnType;
+    private final String txnType;
     private final String txnRefNum;
     private final String displayDesc;
     private final List<LineItem> items;
@@ -32,7 +32,7 @@ public final class PaymentInitRequest {
     private final String additionalData;
     private final String mode;
     private final String modeData;
-    private final List<PaymentMethod> allowedPaymentMethods;
+    private final List<String> allowedPaymentMethods;
     private final String bindData;
     private final String themeRefNum;
     private final String receiptEmail;
@@ -83,7 +83,7 @@ public final class PaymentInitRequest {
         JsonCodec.putIfPresent(node, "payerRefNum", payerRefNum);
         JsonCodec.putIfPresent(node, "deviceRefNum", deviceRefNum);
         JsonCodec.putIfPresent(node, "deviceIp", deviceIp);
-        node.put("txnType", txnType.value());
+        node.put("txnType", txnType);
         node.put("txnRefNum", txnRefNum);
         node.put("displayDesc", displayDesc);
         if (!items.isEmpty()) {
@@ -101,11 +101,7 @@ public final class PaymentInitRequest {
         JsonCodec.putIfPresent(node, "mode", mode);
         JsonCodec.putIfPresent(node, "modeData", modeData);
         if (!allowedPaymentMethods.isEmpty()) {
-            List<String> values = new ArrayList<>();
-            for (PaymentMethod method : allowedPaymentMethods) {
-                values.add(method.value());
-            }
-            JsonCodec.putStringArray(node, "allowedPaymentMethods", values);
+            JsonCodec.putStringArray(node, "allowedPaymentMethods", allowedPaymentMethods);
         }
         JsonCodec.putIfPresent(node, "bindData", bindData);
         JsonCodec.putIfPresent(node, "themeRefNum", themeRefNum);
@@ -130,7 +126,7 @@ public final class PaymentInitRequest {
         private String payerRefNum;
         private String deviceRefNum;
         private String deviceIp;
-        private TxnType txnType;
+        private String txnType;
         private String txnRefNum;
         private String displayDesc;
         private List<LineItem> items = new ArrayList<>();
@@ -143,7 +139,7 @@ public final class PaymentInitRequest {
         private String additionalData;
         private String mode;
         private String modeData;
-        private List<PaymentMethod> allowedPaymentMethods = new ArrayList<>();
+        private List<String> allowedPaymentMethods = new ArrayList<>();
         private String bindData;
         private String themeRefNum;
         private String receiptEmail;
@@ -182,7 +178,7 @@ public final class PaymentInitRequest {
             return this;
         }
 
-        public Builder txnType(TxnType txnType) {
+        public Builder txnType(String txnType) {
             this.txnType = txnType;
             return this;
         }
@@ -247,8 +243,11 @@ public final class PaymentInitRequest {
             return this;
         }
 
-        public Builder allowedPaymentMethods(PaymentMethod... methods) {
-            this.allowedPaymentMethods = new ArrayList<>(Arrays.asList(methods));
+        public Builder allowedPaymentMethods(String... methods) {
+            this.allowedPaymentMethods = new ArrayList<>();
+            if (methods != null) {
+                this.allowedPaymentMethods.addAll(Arrays.asList(methods));
+            }
             return this;
         }
 
