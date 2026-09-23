@@ -4,8 +4,8 @@ import com.prestouniverse.pay.exception.PrestoPayTransportException;
 import com.prestouniverse.pay.internal.JdkHttpTransport;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
-import com.prestouniverse.pay.payments.PaymentInitParams;
-import com.prestouniverse.pay.payments.PaymentQueryParams;
+import com.prestouniverse.pay.payments.PaymentInitRequest;
+import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.TxnType;
 import com.prestouniverse.pay.support.FlakyTransport;
 import com.prestouniverse.pay.support.MockGatewayServer;
@@ -53,7 +53,7 @@ class RetryPolicyContractTest {
         FlakyTransport transport = new FlakyTransport(new JdkHttpTransport(), 1, false);
         PrestoPayClient client = clientWith(transport, RetryPolicy.of(2, Duration.ZERO));
 
-        client.payments().query(PaymentQueryParams.builder().paymentRefNum("PP250423ND56NHO").build());
+        client.payments().query(PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
 
         assertEquals(2, transport.callCount());
     }
@@ -63,7 +63,7 @@ class RetryPolicyContractTest {
         FlakyTransport transport = new FlakyTransport(new JdkHttpTransport(), 1, false);
         PrestoPayClient client = clientWith(transport, RetryPolicy.of(2, Duration.ZERO));
 
-        assertThrows(PrestoPayTransportException.class, () -> client.payments().init(initParams()));
+        assertThrows(PrestoPayTransportException.class, () -> client.payments().init(initRequest()));
         assertEquals(1, transport.callCount());
     }
 
@@ -72,7 +72,7 @@ class RetryPolicyContractTest {
         FlakyTransport transport = new FlakyTransport(new JdkHttpTransport(), 1, true);
         PrestoPayClient client = clientWith(transport, RetryPolicy.of(2, Duration.ZERO));
 
-        client.payments().init(initParams());
+        client.payments().init(initRequest());
 
         assertEquals(2, transport.callCount());
     }
@@ -82,12 +82,12 @@ class RetryPolicyContractTest {
         FlakyTransport transport = new FlakyTransport(new JdkHttpTransport(), 5, true);
         PrestoPayClient client = clientWith(transport, RetryPolicy.of(2, Duration.ZERO));
 
-        assertThrows(PrestoPayTransportException.class, () -> client.payments().init(initParams()));
+        assertThrows(PrestoPayTransportException.class, () -> client.payments().init(initRequest()));
         assertEquals(3, transport.callCount());
     }
 
-    private PaymentInitParams initParams() {
-        return PaymentInitParams.builder()
+    private PaymentInitRequest initRequest() {
+        return PaymentInitRequest.builder()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum("TXN10001")
                 .displayDesc("Order #12345")

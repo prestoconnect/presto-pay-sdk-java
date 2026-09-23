@@ -24,7 +24,7 @@ each integrator hand-rolling HTTP calls, RSA canonicalization, and keystore
 handling.
 
 Ergonomics follow the OpenAI Java SDK and Stripe Java: a builder-constructed,
-thread-safe, reusable client; typed `*Params` builders; typed responses;
+thread-safe, reusable client; typed `*Request` builders; typed responses;
 domain-scoped sub-clients (`client.payments()`, `client.webhooks()`).
 
 ## 2. Gateway contract
@@ -62,7 +62,7 @@ Always use the explicit `/v1` prefix; unversioned URIs auto-route to latest.
   serving many merchants sends a different `prestoMrn` per request.
 
 Both are request-level fields in the SDK: the client builder holds optional
-defaults, each `*Params` builder can override. Because the signing key is
+defaults, each `*Request` builder can override. Because the signing key is
 tied to `mid`, overriding `mid` per request is only meaningful if the same
 key pair is registered for both mids; `prestoMrn` is the normal per-request
 axis.
@@ -210,10 +210,10 @@ presto-pay-sdk/
     ├── PrestoPayKeys.java            PKCS12 / X.509 (DER or PEM) loaders (InputStream + Path overloads)
     ├── payments/
     │   ├── PaymentsClient.java       init / query / reverse / refund
-    │   ├── PaymentInitParams.java    PaymentInitResponse.java
-    │   ├── PaymentQueryParams.java   PaymentQueryResponse.java   (by paymentRefNum or txnRefNum)
-    │   ├── PaymentReverseParams.java PaymentReverseResponse.java
-    │   ├── PaymentRefundParams.java  PaymentRefundResponse.java
+    │   ├── PaymentInitRequest.java    PaymentInitResponse.java
+    │   ├── PaymentQueryRequest.java   PaymentQueryResponse.java   (by paymentRefNum or txnRefNum)
+    │   ├── PaymentReverseRequest.java PaymentReverseResponse.java
+    │   ├── PaymentRefundRequest.java  PaymentRefundResponse.java
     │   ├── TxnType.java              open enum: QrPay / WebPay / MiniAppPay
     │   ├── PaymentStatus.java        open enum: PendingAuthorise / Cancelled / Authorised / Failed / PendingReverse /
     │   │                                        Reversed / PendingRefund / PartialRefunded / Refunded / Expired
@@ -280,7 +280,7 @@ PrestoPayClient client = PrestoPayClient.fromEnv();
 // PRESTOPAY_KEYSTORE_PATH, PRESTOPAY_KEYSTORE_PASSWORD, PRESTOPAY_KEYSTORE_ALIAS
 // PRESTOPAY_PUBLIC_KEY_PATH
 
-PaymentInitResponse init = client.payments().init(PaymentInitParams.builder()
+PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
     .merchantRefNum(prestoMrn)                        // overrides the client default for this call
     .txnType(TxnType.WEB_PAY)
     .txnRefNum(orderRefNum)                           // <= 50 chars
@@ -297,21 +297,21 @@ String redirectTo = init.paymentUrl();
 
 // Query by paymentRefNum, or by txnRefNum when init never returned
 PaymentQueryResponse status = client.payments().query(
-    PaymentQueryParams.builder().paymentRefNum(paymentRefNum).build());
+    PaymentQueryRequest.builder().paymentRefNum(paymentRefNum).build());
 PaymentQueryResponse status = client.payments().query(
-    PaymentQueryParams.builder().txnRefNum(orderRefNum).build());
+    PaymentQueryRequest.builder().txnRefNum(orderRefNum).build());
 if (status.paymentStatus().equals(PaymentStatus.AUTHORISED)) { ... }
 status.paymentStatus().isKnown();                     // false for a code this SDK version doesn't list
 List<PaymentDetail> methods = status.paymentDetails(); // parsed from the JSON string, lazily
 List<RefundDetail> refunds = status.refundDetails();
 
-PaymentReverseResponse rev = client.payments().reverse(PaymentReverseParams.builder()
+PaymentReverseResponse rev = client.payments().reverse(PaymentReverseRequest.builder()
     .paymentRefNum(paymentRefNum)                     // or .txnRefNum(...)
     .reversalRefNum(reversalId)                       // <= 50 chars; may reuse txnRefNum for cancellation
     .remark(reason)
     .build());
 
-PaymentRefundResponse refund = client.payments().refund(PaymentRefundParams.builder()
+PaymentRefundResponse refund = client.payments().refund(PaymentRefundRequest.builder()
     .paymentRefNum(paymentRefNum)
     .refundRefNum(refundId)                           // <= 50 chars
     .remark(reason)                                   // required, <= 200 chars
@@ -374,7 +374,7 @@ or array are `String`, `Integer`/`Long`, `Boolean`, `JsonObject`,
 
 `internal/JsonCodec` sits on top as the typed-accessor layer
 (`requiredText`, `optInt`, `optBoolean`, `putIfPresent`, ...) that the rest
-of the SDK actually calls, so `Canonicalizer` and every `*Params`/`*Response`
+of the SDK actually calls, so `Canonicalizer` and every `*Request`/`*Response`
 class depend on `JsonCodec` + `JsonObject`/`JsonArray`, never on the parser
 or writer directly.
 

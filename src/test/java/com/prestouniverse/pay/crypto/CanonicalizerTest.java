@@ -30,6 +30,13 @@ class CanonicalizerTest {
     }
 
     @Test
+    void canonicalizeJsonMatchesObjectCanonicalize() {
+        String json = "{\"mid\":\"PW2401XH9KCX\",\"amount\":1200,\"ts\":\"20250423104500.000\"}";
+        JsonObject body = JsonObject.parse(json);
+        assertEquals(Canonicalizer.canonicalize(body), Canonicalizer.canonicalizeJson(json));
+    }
+
+    @Test
     void businessErrorBodyFromPresto() {
         JsonObject body = new JsonObject();
         body.put("success", false);

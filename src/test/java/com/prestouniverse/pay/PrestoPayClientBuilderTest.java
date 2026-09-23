@@ -3,7 +3,7 @@ package com.prestouniverse.pay;
 import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
-import com.prestouniverse.pay.payments.PaymentQueryParams;
+import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.support.MockGatewayServer;
 import com.prestouniverse.pay.support.TestKeys;
@@ -47,7 +47,7 @@ class PrestoPayClientBuilderTest {
                 .build();
 
         assertThrows(PrestoPayConfigException.class, () -> client.payments().query(
-                PaymentQueryParams.builder().paymentRefNum("PP1").build()));
+                PaymentQueryRequest.builder().paymentRefNum("PP1").build()));
     }
 
     @Test
@@ -81,7 +81,7 @@ class PrestoPayClientBuilderTest {
             PrestoPayClient client = PrestoPayClient.fromEnv(env);
 
             PaymentQueryResponse response = client.payments().query(
-                    PaymentQueryParams.builder().paymentRefNum("PP1").build());
+                    PaymentQueryRequest.builder().paymentRefNum("PP1").build());
 
             assertEquals("PP1", response.paymentRefNum());
         }

@@ -42,7 +42,7 @@ public final class NotifyEvent {
         this.ts = ts;
     }
 
-    public static NotifyEvent fromJson(JsonObject node) {
+    static NotifyEvent fromJson(JsonObject node) {
         String paymentDetailsJson = JsonCodec.text(node, "paymentDetails");
         return new NotifyEvent(
                 NotifyEventCode.of(JsonCodec.requiredText(node, "eventCode")),

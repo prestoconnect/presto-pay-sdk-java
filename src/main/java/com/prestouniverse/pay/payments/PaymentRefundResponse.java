@@ -28,7 +28,7 @@ public final class PaymentRefundResponse {
         this.ts = ts;
     }
 
-    public static PaymentRefundResponse fromJson(JsonObject node) {
+    static PaymentRefundResponse fromJson(JsonObject node) {
         Integer amount = JsonCodec.optInt(node, "amount");
         Integer refundAmount = JsonCodec.optInt(node, "refundAmount");
         String status = JsonCodec.text(node, "paymentStatus");

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class PaymentInitParams {
+public final class PaymentInitRequest {
 
     private final String merchantId;
     private final String merchantRefNum;
@@ -38,7 +38,7 @@ public final class PaymentInitParams {
     private final String receiptEmail;
     private final String receiptName;
 
-    private PaymentInitParams(Builder builder) {
+    private PaymentInitRequest(Builder builder) {
         this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.qrValue = builder.qrValue;
@@ -77,7 +77,7 @@ public final class PaymentInitParams {
         return merchantRefNum;
     }
 
-    public JsonObject toJson() {
+    JsonObject toJson() {
         JsonObject node = JsonCodec.newObject();
         JsonCodec.putIfPresent(node, "qrValue", qrValue);
         JsonCodec.putIfPresent(node, "payerRefNum", payerRefNum);
@@ -272,7 +272,7 @@ public final class PaymentInitParams {
             return this;
         }
 
-        public PaymentInitParams build() {
+        public PaymentInitRequest build() {
             Validation.requireNonNull("txnType", txnType);
             Validation.requireNonNull("txnRefNum", txnRefNum);
             Validation.requireNonNull("displayDesc", displayDesc);
@@ -301,7 +301,7 @@ public final class PaymentInitParams {
                         "redirectUrl is required when txnType is WebPay");
             }
 
-            return new PaymentInitParams(this);
+            return new PaymentInitRequest(this);
         }
     }
 }

@@ -35,7 +35,7 @@ public final class PaymentInitResponse {
         this.ts = ts;
     }
 
-    public static PaymentInitResponse fromJson(JsonObject node) {
+    static PaymentInitResponse fromJson(JsonObject node) {
         return new PaymentInitResponse(
                 JsonCodec.requiredText(node, "prestoMrn"),
                 JsonCodec.requiredText(node, "paymentRefNum"),

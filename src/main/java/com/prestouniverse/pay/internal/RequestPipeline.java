@@ -1,6 +1,7 @@
 package com.prestouniverse.pay.internal;
 
 import com.prestouniverse.pay.RetryPolicy;
+import com.prestouniverse.pay.SdkVersion;
 import com.prestouniverse.pay.crypto.Canonicalizer;
 import com.prestouniverse.pay.crypto.RsaSignatureService;
 import com.prestouniverse.pay.exception.PrestoPayApiException;
@@ -23,7 +24,7 @@ import java.util.Map;
 public final class RequestPipeline {
 
     private static final String USER_AGENT =
-            "presto-pay-sdk/0.1.0 java/" + System.getProperty("java.version", "unknown");
+            "presto-pay-sdk/" + SdkVersion.version() + " java/" + System.getProperty("java.version", "unknown");
 
     private final String baseUrl;
     private final String defaultMerchantId;
@@ -142,7 +143,7 @@ public final class RequestPipeline {
             return defaultValue;
         }
         throw new PrestoPayConfigException(field,
-                field + " is required: set it on the client builder or on this request's params");
+                field + " is required: set it on the client builder or on this request");
     }
 
     private Map<String, String> headers() {

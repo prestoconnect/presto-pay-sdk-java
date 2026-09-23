@@ -14,6 +14,16 @@ public final class Canonicalizer {
     private Canonicalizer() {
     }
 
+    /**
+     * Builds the gateway canonical string from a JSON request or response body.
+     *
+     * @param json UTF-8 JSON object text (must not include a {@code signature} field when verifying)
+     * @return colon-separated values in ascending key order
+     */
+    public static String canonicalizeJson(String json) {
+        return canonicalize(JsonObject.parse(json));
+    }
+
     public static String canonicalize(JsonObject body) {
         List<String> keys = new ArrayList<>();
         for (String key : body.fieldNames()) {

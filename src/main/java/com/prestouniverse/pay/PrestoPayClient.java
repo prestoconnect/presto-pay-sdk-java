@@ -15,6 +15,20 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 
+/**
+ * Thread-safe entry point for the Presto Connect payment gateway.
+ *
+ * <p>Build one client per partner {@code mid} and RSA key pair (per environment), then reuse it
+ * across threads. Use {@code *Request} builders under {@code payments}; override
+ * {@code prestoMrn} per call when serving many sub-merchants.
+ *
+ * <p>If {@code init} fails with a transport timeout after the request may have been sent, do not
+ * retry {@code init} with the same {@code txnRefNum}. Call {@code query} with that {@code txnRefNum}
+ * to reconcile state instead.
+ *
+ * @see com.prestouniverse.pay.payments.PaymentsClient
+ * @see com.prestouniverse.pay.webhooks.WebhooksClient
+ */
 public final class PrestoPayClient {
 
     private final PaymentsClient payments;

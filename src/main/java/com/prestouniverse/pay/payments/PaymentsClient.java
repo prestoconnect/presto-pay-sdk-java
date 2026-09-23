@@ -15,23 +15,23 @@ public final class PaymentsClient {
         this.pipeline = pipeline;
     }
 
-    public PaymentInitResponse init(PaymentInitParams params) {
-        return PaymentInitResponse.fromJson(
-                pipeline.execute(INIT_PATH, params.toJson(), params.merchantId(), params.merchantRefNum(), false));
+    public PaymentInitResponse init(PaymentInitRequest request) {
+        return PaymentInitResponse.fromJson(pipeline.execute(
+                INIT_PATH, request.toJson(), request.merchantId(), request.merchantRefNum(), false));
     }
 
-    public PaymentQueryResponse query(PaymentQueryParams params) {
-        return PaymentQueryResponse.fromJson(
-                pipeline.execute(QUERY_PATH, params.toJson(), params.merchantId(), params.merchantRefNum(), true));
+    public PaymentQueryResponse query(PaymentQueryRequest request) {
+        return PaymentQueryResponse.fromJson(pipeline.execute(
+                QUERY_PATH, request.toJson(), request.merchantId(), request.merchantRefNum(), true));
     }
 
-    public PaymentReverseResponse reverse(PaymentReverseParams params) {
+    public PaymentReverseResponse reverse(PaymentReverseRequest request) {
         return PaymentReverseResponse.fromJson(pipeline.execute(
-                REVERSE_PATH, params.toJson(), params.merchantId(), params.merchantRefNum(), false));
+                REVERSE_PATH, request.toJson(), request.merchantId(), request.merchantRefNum(), false));
     }
 
-    public PaymentRefundResponse refund(PaymentRefundParams params) {
-        return PaymentRefundResponse.fromJson(
-                pipeline.execute(REFUND_PATH, params.toJson(), params.merchantId(), params.merchantRefNum(), false));
+    public PaymentRefundResponse refund(PaymentRefundRequest request) {
+        return PaymentRefundResponse.fromJson(pipeline.execute(
+                REFUND_PATH, request.toJson(), request.merchantId(), request.merchantRefNum(), false));
     }
 }

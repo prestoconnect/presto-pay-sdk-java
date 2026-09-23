@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ParamsValidationTest {
+class RequestValidationTest {
 
     @Test
     void initRequiresTxnType() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .build());
@@ -18,7 +18,7 @@ class ParamsValidationTest {
 
     @Test
     void initRejectsQrValueAndPayerRefNumTogether() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -29,7 +29,7 @@ class ParamsValidationTest {
 
     @Test
     void initRequiresCurrencyCodeWhenAmountIsSet() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -39,7 +39,7 @@ class ParamsValidationTest {
 
     @Test
     void webPayRequiresRedirectUrl() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
@@ -49,7 +49,7 @@ class ParamsValidationTest {
     @Test
     void initRejectsTxnRefNumOverMaxLength() {
         String tooLong = repeat("a", 51);
-        assertThrows(PrestoPayConfigException.class, () -> PaymentInitParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentInitRequest.builder()
                 .txnType(TxnType.QR_PAY)
                 .txnRefNum(tooLong)
                 .displayDesc("desc")
@@ -58,19 +58,19 @@ class ParamsValidationTest {
 
     @Test
     void queryRequiresEitherRefNum() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentQueryParams.builder().build());
+        assertThrows(PrestoPayConfigException.class, () -> PaymentQueryRequest.builder().build());
     }
 
     @Test
     void reverseRequiresReversalRefNum() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentReverseParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentReverseRequest.builder()
                 .paymentRefNum("PP1")
                 .build());
     }
 
     @Test
     void refundRequiresRemark() {
-        assertThrows(PrestoPayConfigException.class, () -> PaymentRefundParams.builder()
+        assertThrows(PrestoPayConfigException.class, () -> PaymentRefundRequest.builder()
                 .paymentRefNum("PP1")
                 .refundRefNum("RFD1")
                 .build());

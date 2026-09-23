@@ -4,7 +4,7 @@ import com.prestouniverse.pay.exception.PrestoPayConfigException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
-public final class PaymentReverseParams {
+public final class PaymentReverseRequest {
 
     private final String merchantId;
     private final String merchantRefNum;
@@ -14,7 +14,7 @@ public final class PaymentReverseParams {
     private final String remark;
     private final String notifyUrl;
 
-    private PaymentReverseParams(Builder builder) {
+    private PaymentReverseRequest(Builder builder) {
         this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.paymentRefNum = builder.paymentRefNum;
@@ -36,7 +36,7 @@ public final class PaymentReverseParams {
         return merchantRefNum;
     }
 
-    public JsonObject toJson() {
+    JsonObject toJson() {
         JsonObject node = JsonCodec.newObject();
         JsonCodec.putIfPresent(node, "paymentRefNum", paymentRefNum);
         JsonCodec.putIfPresent(node, "txnRefNum", txnRefNum);
@@ -94,7 +94,7 @@ public final class PaymentReverseParams {
             return this;
         }
 
-        public PaymentReverseParams build() {
+        public PaymentReverseRequest build() {
             Validation.requireNonNull("reversalRefNum", reversalRefNum);
             Validation.requireMaxLength("reversalRefNum", reversalRefNum, 50);
             Validation.requireMaxLength("remark", remark, 200);
@@ -103,7 +103,7 @@ public final class PaymentReverseParams {
                 throw new PrestoPayConfigException("paymentRefNum",
                         "either paymentRefNum or txnRefNum is required");
             }
-            return new PaymentReverseParams(this);
+            return new PaymentReverseRequest(this);
         }
     }
 }

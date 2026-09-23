@@ -7,13 +7,13 @@ import com.prestouniverse.pay.exception.PrestoPaySignatureException;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.Timestamps;
 import com.prestouniverse.pay.internal.json.JsonObject;
-import com.prestouniverse.pay.payments.PaymentInitParams;
+import com.prestouniverse.pay.payments.PaymentInitRequest;
 import com.prestouniverse.pay.payments.PaymentInitResponse;
-import com.prestouniverse.pay.payments.PaymentQueryParams;
+import com.prestouniverse.pay.payments.PaymentQueryRequest;
 import com.prestouniverse.pay.payments.PaymentQueryResponse;
-import com.prestouniverse.pay.payments.PaymentRefundParams;
+import com.prestouniverse.pay.payments.PaymentRefundRequest;
 import com.prestouniverse.pay.payments.PaymentRefundResponse;
-import com.prestouniverse.pay.payments.PaymentReverseParams;
+import com.prestouniverse.pay.payments.PaymentReverseRequest;
 import com.prestouniverse.pay.payments.PaymentReverseResponse;
 import com.prestouniverse.pay.payments.PaymentStatus;
 import com.prestouniverse.pay.payments.TxnType;
@@ -79,7 +79,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentInitResponse response = client.payments().init(PaymentInitParams.builder()
+        PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN10001")
                 .displayDesc("Order #12345")
@@ -97,6 +97,7 @@ class PrestoPayClientContractTest {
         assertEquals(MID, JsonCodec.text(sentRequest, "mid"));
         assertEquals(MRN, JsonCodec.text(sentRequest, "prestoMrn"));
         assertRequestIsCorrectlySigned(sentRequest);
+        assertTrue(mockGateway.lastRequestHeaders().get("User-Agent").startsWith("presto-pay-sdk/"));
 
         assertEquals("application/json; charset=UTF-8", mockGateway.lastRequestHeaders().get("Content-Type"));
     }
@@ -121,7 +122,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentInitResponse response = client.payments().init(PaymentInitParams.builder()
+        PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
                 .txnType(TxnType.WEB_PAY)
                 .txnRefNum("TXN10001")
                 .displayDesc(displayDesc)
@@ -155,7 +156,7 @@ class PrestoPayClientContractTest {
         });
 
         PaymentQueryResponse response = client.payments().query(
-                PaymentQueryParams.builder().paymentRefNum("PP250423ND56NHO").build());
+                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
 
         assertEquals(PaymentStatus.AUTHORISED, response.paymentStatus());
         assertEquals(1, response.paymentDetails().size());
@@ -178,7 +179,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentReverseResponse response = client.payments().reverse(PaymentReverseParams.builder()
+        PaymentReverseResponse response = client.payments().reverse(PaymentReverseRequest.builder()
                 .paymentRefNum("PP250423ND56NHO")
                 .reversalRefNum("REV10001")
                 .remark("Customer cancelled order")
@@ -205,7 +206,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        PaymentRefundResponse response = client.payments().refund(PaymentRefundParams.builder()
+        PaymentRefundResponse response = client.payments().refund(PaymentRefundRequest.builder()
                 .paymentRefNum("PP250423ND56NHO")
                 .refundRefNum("RFD10001")
                 .remark("Customer requested refund")
@@ -234,7 +235,7 @@ class PrestoPayClientContractTest {
             return MockGatewayServer.Response.signed(200, response);
         });
 
-        client.payments().refund(PaymentRefundParams.builder()
+        client.payments().refund(PaymentRefundRequest.builder()
                 .paymentRefNum("PP250423ND56NHO")
                 .refundRefNum("RFD10001")
                 .remark(remark)
@@ -267,7 +268,7 @@ class PrestoPayClientContractTest {
         });
 
         assertThrows(PrestoPaySignatureException.class, () -> client.payments().query(
-                PaymentQueryParams.builder().paymentRefNum("PP250423ND56NHO").build()));
+                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build()));
     }
 
     @Test
@@ -275,7 +276,7 @@ class PrestoPayClientContractTest {
         mockGateway.handler(request -> MockGatewayServer.Response.systemError(400, "1006", "Invalid request."));
 
         PrestoPayApiException exception = assertThrows(PrestoPayApiException.class, () -> client.payments().query(
-                PaymentQueryParams.builder().paymentRefNum("PP250423ND56NHO").build()));
+                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build()));
 
         assertTrue(exception.isSystemError());
         assertEquals("1006", exception.errorCode());
@@ -294,7 +295,7 @@ class PrestoPayClientContractTest {
         });
 
         PrestoPayApiException exception = assertThrows(PrestoPayApiException.class, () -> client.payments().init(
-                PaymentInitParams.builder()
+                PaymentInitRequest.builder()
                         .txnType(TxnType.QR_PAY)
                         .txnRefNum("TXN10001")
                         .displayDesc("Order #12345")

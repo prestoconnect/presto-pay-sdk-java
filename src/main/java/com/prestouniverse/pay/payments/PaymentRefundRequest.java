@@ -3,7 +3,7 @@ package com.prestouniverse.pay.payments;
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
 
-public final class PaymentRefundParams {
+public final class PaymentRefundRequest {
 
     private final String merchantId;
     private final String merchantRefNum;
@@ -13,7 +13,7 @@ public final class PaymentRefundParams {
     private final String notifyUrl;
     private final Integer amount;
 
-    private PaymentRefundParams(Builder builder) {
+    private PaymentRefundRequest(Builder builder) {
         this.merchantId = builder.merchantId;
         this.merchantRefNum = builder.merchantRefNum;
         this.paymentRefNum = builder.paymentRefNum;
@@ -35,7 +35,7 @@ public final class PaymentRefundParams {
         return merchantRefNum;
     }
 
-    public JsonObject toJson() {
+    JsonObject toJson() {
         JsonObject node = JsonCodec.newObject();
         node.put("paymentRefNum", paymentRefNum);
         node.put("refundRefNum", refundRefNum);
@@ -93,13 +93,13 @@ public final class PaymentRefundParams {
             return this;
         }
 
-        public PaymentRefundParams build() {
+        public PaymentRefundRequest build() {
             Validation.requireNonNull("paymentRefNum", paymentRefNum);
             Validation.requireNonNull("refundRefNum", refundRefNum);
             Validation.requireNonNull("remark", remark);
             Validation.requireMaxLength("refundRefNum", refundRefNum, 50);
             Validation.requireMaxLength("remark", remark, 200);
-            return new PaymentRefundParams(this);
+            return new PaymentRefundRequest(this);
         }
     }
 }

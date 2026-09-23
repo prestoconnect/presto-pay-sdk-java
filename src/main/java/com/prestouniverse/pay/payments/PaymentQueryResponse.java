@@ -55,7 +55,7 @@ public final class PaymentQueryResponse {
         this.ts = builder.ts;
     }
 
-    public static PaymentQueryResponse fromJson(JsonObject node) {
+    static PaymentQueryResponse fromJson(JsonObject node) {
         Builder builder = new Builder();
         builder.prestoMrn = JsonCodec.text(node, "prestoMrn");
         builder.paymentRefNum = JsonCodec.requiredText(node, "paymentRefNum");
