@@ -21,6 +21,7 @@ For webhook endpoints, verify the raw body before parsing JSON with your web fra
 @PostMapping("/presto/notify")
 ResponseEntity<String> notify(@RequestBody String body) {
     NotifyEvent event = prestoPayClient.webhooks().parse(body);
+    String suggestedStatus = event.getPaymentStatus();
     // enqueue work asynchronously, then:
     return ResponseEntity.ok(NotifyAck.ok());
 }

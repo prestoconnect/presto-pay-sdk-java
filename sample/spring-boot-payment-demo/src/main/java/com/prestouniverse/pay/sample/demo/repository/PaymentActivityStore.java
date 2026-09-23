@@ -163,15 +163,17 @@ public class PaymentActivityStore {
 
         private final String txnRefNum;
         private final String eventCode;
+        private final String paymentStatus;
         private final boolean success;
         private final int amountMinorUnits;
         private final String currencyCode;
         private final Instant receivedAt;
 
-        public WebhookRecord(String txnRefNum, String eventCode, boolean success, int amountMinorUnits,
-                String currencyCode, Instant receivedAt) {
+        public WebhookRecord(String txnRefNum, String eventCode, String paymentStatus, boolean success,
+                int amountMinorUnits, String currencyCode, Instant receivedAt) {
             this.txnRefNum = txnRefNum;
             this.eventCode = eventCode;
+            this.paymentStatus = paymentStatus;
             this.success = success;
             this.amountMinorUnits = amountMinorUnits;
             this.currencyCode = currencyCode;
@@ -184,6 +186,10 @@ public class PaymentActivityStore {
 
         public String getEventCode() {
             return eventCode;
+        }
+
+        public String getPaymentStatus() {
+            return paymentStatus;
         }
 
         public boolean isSuccess() {

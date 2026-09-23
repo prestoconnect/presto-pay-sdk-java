@@ -88,12 +88,13 @@ WebhookVerifier verifier = WebhookVerifier.builder()
     .build();
 
 NotifyEvent event = verifier.parse(rawRequestBody);
+String suggestedStatus = event.getPaymentStatus(); // Authorised uses success; others map to PaymentStatus
 // return 200 with NotifyAck.ok()
 ```
 
 If you already have a `PrestoPayClient`, `client.webhooks().parse(rawBody)` uses the same Presto public key.
 
-After any webhook, the gateway recommends calling `query` for authoritative payment status.
+`event.getPaymentStatus()` reflects the notify contract (for **Authorised**, `success` indicates authorisation outcome). Compare `event.eventCode()` to `NotifyEventCode` constants. After any webhook, call `payments().query()` for authoritative payment status.
 
 ## Errors
 

@@ -21,6 +21,7 @@ import com.prestouniverse.pay.payments.TxnType;
 import com.prestouniverse.pay.support.MockGatewayServer;
 import com.prestouniverse.pay.support.TestKeys;
 import com.prestouniverse.pay.webhooks.NotifyEvent;
+import com.prestouniverse.pay.webhooks.NotifyEventCode;
 import com.prestouniverse.pay.webhooks.WebhookVerifier;
 
 import java.time.Clock;
@@ -192,6 +193,31 @@ class PrestoPayClientContractTest {
     }
 
     @Test
+    void queryPaymentDetailParsesRefNum() {
+        mockGateway.handler(request -> {
+            JsonObject response = JsonCodec.newObject();
+            response.put("prestoMrn", MRN);
+            response.put("paymentRefNum", "PP250423ND56NHO");
+            response.put("txnRefNum", "TXN10001");
+            response.put("paymentStatus", "Authorised");
+            response.put("amount", 1200);
+            response.put("currencyCode", "MYR");
+            response.put("paymentRequestDate", "20250423104500.000");
+            response.put("paymentFinalisedDate", "20250423105020.000");
+            response.put("refundDetails", "[]");
+            response.put("paymentDetails", "[{\"method\":\"Wallet\",\"amount\":1200,\"refNum\":\"PD-REF-99\"}]");
+            response.put("ts", "20250423105030.000");
+            response.put("success", true);
+            return MockGatewayServer.Response.signed(200, response);
+        });
+
+        PaymentQueryResponse response = client.payments().query(
+                PaymentQueryRequest.builder().paymentRefNum("PP250423ND56NHO").build());
+
+        assertEquals("PD-REF-99", response.paymentDetails().get(0).refNum());
+    }
+
+    @Test
     void reverseRoundTrip() {
         mockGateway.handler(request -> {
             JsonObject response = JsonCodec.newObject();
@@ -342,7 +368,7 @@ class PrestoPayClientContractTest {
     @Test
     void validWebhookParsesIntoATypedEvent() {
         JsonObject body = JsonCodec.newObject();
-        body.put("eventCode", "Authorised");
+        body.put("eventCode", PaymentStatus.AUTHORISED);
         body.put("mid", MID);
         body.put("prestoMrn", MRN);
         body.put("paymentRefNum", "PP250423ND56NHO");
@@ -361,9 +387,10 @@ class PrestoPayClientContractTest {
         WebhookVerifier verifier = WebhookVerifier.builder().prestoPublicKey(TestKeys.publicKey()).build();
         NotifyEvent event = verifier.parse(JsonCodec.write(body));
 
-        assertEquals("Authorised", event.eventCode().value());
-        assertTrue(event.eventCode().isKnown());
+        assertEquals(NotifyEventCode.AUTHORISED, event.eventCode());
+        assertEquals(PaymentStatus.AUTHORISED, event.eventCode());
         assertTrue(event.success());
+        assertEquals(PaymentStatus.AUTHORISED, event.getPaymentStatus());
         assertEquals(1, event.paymentDetails().size());
     }
 

@@ -31,8 +31,10 @@ public class WebhookController {
     @PostMapping(value = "/presto/notify", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> notify(@RequestBody String body) {
         NotifyEvent event = prestoPayClient.webhooks().parse(body);
-        log.info("Webhook verified eventCode={} txnRefNum={} paymentRefNum={} success={} amount={} {} eventRefNum={}",
-                event.eventCode().value(),
+        log.info("Webhook verified eventCode={} paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
+                        + "amount={} {} eventRefNum={}",
+                event.eventCode(),
+                event.getPaymentStatus(),
                 event.txnRefNum(),
                 event.paymentRefNum(),
                 event.success(),
@@ -42,7 +44,8 @@ public class WebhookController {
 
         activityStore.appendWebhook(new WebhookRecord(
                 event.txnRefNum(),
-                event.eventCode().value(),
+                event.eventCode(),
+                event.getPaymentStatus(),
                 event.success(),
                 event.amount(),
                 event.currencyCode(),

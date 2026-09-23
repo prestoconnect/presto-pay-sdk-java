@@ -302,6 +302,24 @@ table.feed tr:last-child td {
   border-bottom: none;
 }
 
+table.feed td.feed-desc {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  max-width: 22rem;
+}
+
+table.feed-ref td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.success-comment-highlight {
+  color: var(--accent, #0b5);
+  font-weight: 600;
+}
+
 .meta-list {
   list-style: none;
   padding: 0;

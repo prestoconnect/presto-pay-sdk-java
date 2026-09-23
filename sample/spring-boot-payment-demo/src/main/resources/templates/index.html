@@ -57,14 +57,16 @@
     <h3>Recent webhooks (shared)</h3>
     <table class="feed">
       <thead>
-      <tr><th>Time</th><th>Event</th><th>Txn ref</th><th>OK</th></tr>
+      <tr><th>Time</th><th>Event</th><th>Status</th><th>Txn ref</th><th>success</th></tr>
       </thead>
       <tbody>
       <tr th:each="w : ${recentWebhooks}">
         <td th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
         <td th:text="${w.eventCode}">Authorised</td>
+        <td th:text="${w.paymentStatus}">Authorised</td>
         <td th:text="${w.txnRefNum}">demo-</td>
-        <td th:text="${w.success}">true</td>
+        <td th:classappend="${w.eventCode == 'Authorised'} ? 'success-comment-highlight' : _"
+            th:text="${w.success}">true</td>
       </tr>
       </tbody>
     </table>

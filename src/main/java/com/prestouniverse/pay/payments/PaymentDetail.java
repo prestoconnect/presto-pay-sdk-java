@@ -13,13 +13,16 @@ public final class PaymentDetail {
     private final String cardBin;
     private final String cardSummary;
     private final String cardType;
+    private final String refNum;
 
-    private PaymentDetail(String method, int amount, String cardBin, String cardSummary, String cardType) {
+    private PaymentDetail(String method, int amount, String cardBin, String cardSummary, String cardType,
+            String refNum) {
         this.method = method;
         this.amount = amount;
         this.cardBin = cardBin;
         this.cardSummary = cardSummary;
         this.cardType = cardType;
+        this.refNum = refNum;
     }
 
     public static List<PaymentDetail> parseList(String json) {
@@ -36,7 +39,8 @@ public final class PaymentDetail {
                 JsonCodec.requiredInt(node, "amount"),
                 JsonCodec.text(node, "cardBin"),
                 JsonCodec.text(node, "cardSummary"),
-                JsonCodec.text(node, "cardType"));
+                JsonCodec.text(node, "cardType"),
+                JsonCodec.text(node, "refNum"));
     }
 
     public String method() {
@@ -57,5 +61,9 @@ public final class PaymentDetail {
 
     public String cardType() {
         return cardType;
+    }
+
+    public String refNum() {
+        return refNum;
     }
 }
