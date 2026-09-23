@@ -54,6 +54,9 @@ public final class PaymentMethod {
     public static final String TouchNGoEWallet = "TouchNGoEWallet";
     public static final String AliPayChina = "AliPayChina";
     public static final String LatitudePay = "LatitudePay";
+    public static final String ApplePay = "ApplePay";
+    public static final String GooglePay = "GooglePay";
+    public static final String DuitNowQR = "DuitNowQR";
 
     private PaymentMethod() {
     }
