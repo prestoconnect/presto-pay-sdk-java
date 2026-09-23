@@ -39,6 +39,6 @@ public class HostedCheckoutController {
             CheckoutViewAttributes.populateHostedPage(model, activityStore, form);
             return "hosted";
         }
-        return PaymentInitRedirect.viewAfterInit(checkoutService.initiateHostedPayment(form));
+        return PaymentInitRedirect.viewAfterInit(checkoutService.checkout(form));
     }
 }

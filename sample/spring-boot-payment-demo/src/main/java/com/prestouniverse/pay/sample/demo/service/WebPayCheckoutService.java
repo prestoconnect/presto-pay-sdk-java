@@ -35,7 +35,7 @@ public class WebPayCheckoutService {
         this.activityStore = activityStore;
     }
 
-    public PaymentInitResponse initiateHostedPayment(HostedCheckoutForm form) {
+    public PaymentInitResponse checkout(HostedCheckoutForm form) {
         String txnRefNum = DemoTxnReferenceGenerator.next();
         int amountMinorUnits = CheckoutAmounts.toMinorUnits(form.getAmountInRinggit());
         String displayDesc = form.getDisplayDesc().trim();
@@ -46,10 +46,10 @@ public class WebPayCheckoutService {
         CheckoutRecord pendingRecord = CheckoutRecord.forHostedInit(txnRefNum, displayDesc, amountMinorUnits,
                 appProperties.getDefaultCurrency());
 
-        return executeInit(buildWebPayInitRequest(displayDesc, amountMinorUnits, txnRefNum), pendingRecord);
+        return doInit(buildWebPayInitRequest(displayDesc, amountMinorUnits, txnRefNum), pendingRecord);
     }
 
-    public PaymentInitResponse initiateSelfHostedPayment(SelfHostedCheckoutForm form) {
+    public PaymentInitResponse checkout(SelfHostedCheckoutForm form) {
         String txnRefNum = DemoTxnReferenceGenerator.next();
         int amountMinorUnits = CheckoutAmounts.toMinorUnits(form.getAmountInRinggit());
         String displayDesc = form.getDisplayDesc().trim();
@@ -69,10 +69,10 @@ public class WebPayCheckoutService {
                         form.getReceiptName(), form.getReceiptEmail()),
                 amountMinorUnits, appProperties.getDefaultCurrency());
 
-        return executeInit(initRequest, pendingRecord);
+        return doInit(initRequest, pendingRecord);
     }
 
-    public PaymentQueryResponse queryPaymentStatus(String txnRefNum) {
+    public PaymentQueryResponse query(String txnRefNum) {
         log.info("Querying payment txnRefNum={}", txnRefNum);
         PaymentQueryResponse response = prestoPayClient.payments().query(
                 PaymentQueryRequest.builder().txnRefNum(txnRefNum).build());
@@ -107,7 +107,7 @@ public class WebPayCheckoutService {
         }
     }
 
-    private PaymentInitResponse executeInit(PaymentInitRequest.Builder initRequestBuilder, CheckoutRecord pending) {
+    private PaymentInitResponse doInit(PaymentInitRequest.Builder initRequestBuilder, CheckoutRecord pending) {
         PaymentInitResponse response = prestoPayClient.payments().init(initRequestBuilder.build());
         log.info("WebPay init succeeded txnRefNum={} paymentRefNum={} paymentStatus={} paymentUrlPresent={}",
                 response.txnRefNum(),

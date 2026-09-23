@@ -44,7 +44,7 @@ public class ReturnController {
         activityStore.findCheckoutByTxnRef(merchantTxnRef).ifPresent(record -> model.addAttribute("checkout", record));
 
         try {
-            PaymentQueryResponse queryResult = checkoutService.queryPaymentStatus(merchantTxnRef);
+            PaymentQueryResponse queryResult = checkoutService.query(merchantTxnRef);
             model.addAttribute("query", queryResult);
         } catch (PrestoPayException ex) {
             log.warn("Query failed for txnRefNum={}: {}", merchantTxnRef, ex.getMessage());

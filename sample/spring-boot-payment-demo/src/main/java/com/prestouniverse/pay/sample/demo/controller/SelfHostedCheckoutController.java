@@ -44,6 +44,6 @@ public class SelfHostedCheckoutController {
             CheckoutViewAttributes.populateSelfHostedPage(model, activityStore, form);
             return "self-hosted";
         }
-        return PaymentInitRedirect.viewAfterInit(checkoutService.initiateSelfHostedPayment(form));
+        return PaymentInitRedirect.viewAfterInit(checkoutService.checkout(form));
     }
 }
