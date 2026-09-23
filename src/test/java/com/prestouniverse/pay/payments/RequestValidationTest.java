@@ -21,7 +21,7 @@ class RequestValidationTest {
     @Test
     void everyRequestRequiresMerchantRefNum() {
         assertRejects("merchantRefNum", () -> PaymentInitRequest.builder()
-                .txnType(TxnType.QR_PAY)
+                .txnType(TxnType.QrPay)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .build());
@@ -55,7 +55,7 @@ class RequestValidationTest {
     @Test
     void initRejectsQrValueAndPayerRefNumTogether() {
         assertRejects("qrValue", () -> init()
-                .txnType(TxnType.QR_PAY)
+                .txnType(TxnType.QrPay)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .qrValue("qr")
@@ -66,7 +66,7 @@ class RequestValidationTest {
     @Test
     void initRequiresCurrencyCodeWhenAmountIsSet() {
         assertRejects("currencyCode", () -> init()
-                .txnType(TxnType.QR_PAY)
+                .txnType(TxnType.QrPay)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .amount(100)
@@ -76,7 +76,7 @@ class RequestValidationTest {
     @Test
     void webPayRequiresRedirectUrl() {
         assertRejects("redirectUrl", () -> init()
-                .txnType(TxnType.WEB_PAY)
+                .txnType(TxnType.WebPay)
                 .txnRefNum("TXN1")
                 .displayDesc("desc")
                 .build());
@@ -86,7 +86,7 @@ class RequestValidationTest {
     void initRejectsTxnRefNumOverMaxLength() {
         String tooLong = repeat("a", 51);
         assertRejects("txnRefNum", () -> init()
-                .txnType(TxnType.QR_PAY)
+                .txnType(TxnType.QrPay)
                 .txnRefNum(tooLong)
                 .displayDesc("desc")
                 .build());
@@ -103,22 +103,22 @@ class RequestValidationTest {
         LineItem item = LineItem.builder().itemDesc("Coffee").quantity(1).unitAmount(100).totalAmount(100).build();
         assertRejects("items", () -> qrInit().items(item, null).build());
         assertRejects("allowedPaymentMethods", () -> qrInit()
-                .allowedPaymentMethods(Arrays.asList(PaymentMethod.CARD, null))
+                .allowedPaymentMethods(Arrays.asList(PaymentMethod.Card, null))
                 .build());
     }
 
     @Test
     void initListSettersTreatNullAsEmptyAndCopyTheInput() {
-        List<String> methods = new ArrayList<>(Arrays.asList(PaymentMethod.CARD));
+        List<String> methods = new ArrayList<>(Arrays.asList(PaymentMethod.Card));
         PaymentInitRequest request = qrInit()
                 .items((LineItem[]) null)
                 .allowedPaymentMethods(methods)
                 .build();
-        methods.add(PaymentMethod.WALLET);
+        methods.add(PaymentMethod.Wallet);
 
         JsonObject json = request.toJson();
         assertFalse(json.has("itemList"));
-        assertEquals("[\"" + PaymentMethod.CARD + "\"]", json.get("allowedPaymentMethods"));
+        assertEquals("[\"" + PaymentMethod.Card + "\"]", json.get("allowedPaymentMethods"));
     }
 
     @Test
@@ -154,7 +154,7 @@ class RequestValidationTest {
     }
 
     private static PaymentInitRequest.Builder qrInit() {
-        return init().txnType(TxnType.QR_PAY).txnRefNum("TXN1").displayDesc("desc");
+        return init().txnType(TxnType.QrPay).txnRefNum("TXN1").displayDesc("desc");
     }
 
     private static PaymentRefundRequest.Builder refund() {

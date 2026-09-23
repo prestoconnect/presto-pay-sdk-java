@@ -14,16 +14,16 @@ class NotifyEventTest {
 
     @Test
     void authorisedSuccessMapsToAuthorisedOrFailed() {
-        assertEquals(PaymentStatus.AUTHORISED, parse(NotifyEventCode.AUTHORISED, true).paymentStatus());
-        assertEquals(PaymentStatus.FAILED, parse(NotifyEventCode.AUTHORISED, false).paymentStatus());
+        assertEquals(PaymentStatus.Authorised, parse(NotifyEventCode.Authorised, true).paymentStatus());
+        assertEquals(PaymentStatus.Failed, parse(NotifyEventCode.Authorised, false).paymentStatus());
     }
 
     @Test
     void knownEventCodesMapToMatchingPaymentStatus() {
-        assertEquals(PaymentStatus.CANCELLED, parse(NotifyEventCode.CANCELLED, false).paymentStatus());
-        assertEquals(PaymentStatus.REVERSED, parse(NotifyEventCode.REVERSED, true).paymentStatus());
-        assertEquals(PaymentStatus.REFUNDED, parse(NotifyEventCode.REFUNDED, true).paymentStatus());
-        assertEquals(PaymentStatus.EXPIRED, parse(NotifyEventCode.EXPIRED, false).paymentStatus());
+        assertEquals(PaymentStatus.Cancelled, parse(NotifyEventCode.Cancelled, false).paymentStatus());
+        assertEquals(PaymentStatus.Reversed, parse(NotifyEventCode.Reversed, true).paymentStatus());
+        assertEquals(PaymentStatus.Refunded, parse(NotifyEventCode.Refunded, true).paymentStatus());
+        assertEquals(PaymentStatus.Expired, parse(NotifyEventCode.Expired, false).paymentStatus());
     }
 
     @Test
@@ -35,7 +35,7 @@ class NotifyEventTest {
 
     @Test
     void toStringShowsIdentifiersButNotUserOrAdditionalData() {
-        JsonObject body = body(NotifyEventCode.AUTHORISED, true);
+        JsonObject body = body(NotifyEventCode.Authorised, true);
         body.put("userRefNum", "user-secret");
         body.put("additionalData", "extra-secret");
         body.put("paymentDetails", "[{\"method\":\"Card\",\"amount\":100,\"cardBin\":\"411111\",\"refNum\":\"R1\"}]");

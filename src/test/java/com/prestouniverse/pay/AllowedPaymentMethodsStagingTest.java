@@ -29,14 +29,14 @@ class AllowedPaymentMethodsStagingTest {
         String txnRefNum = "sdk-apm-" + System.currentTimeMillis();
         PaymentInitResponse response = client.payments().init(PaymentInitRequest.builder()
                 .merchantRefNum(System.getenv("PRESTOPAY_MRN"))
-                .txnType(TxnType.WEB_PAY)
+                .txnType(TxnType.WebPay)
                 .txnRefNum(txnRefNum)
                 .displayDesc("APM smoke Wallet")
                 .amount(1000)
                 .currencyCode("MYR")
                 .notifyUrl(NOTIFY)
                 .redirectUrl("http://localhost:8080/return?txnRefNum=" + txnRefNum)
-                .allowedPaymentMethods(PaymentMethod.WALLET)
+                .allowedPaymentMethods(PaymentMethod.Wallet)
                 .build());
         assertNotNull(response.paymentUrl());
     }

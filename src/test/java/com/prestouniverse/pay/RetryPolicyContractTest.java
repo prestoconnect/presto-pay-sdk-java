@@ -188,7 +188,7 @@ class RetryPolicyContractTest {
     private PaymentInitRequest initRequest() {
         return PaymentInitRequest.builder()
                 .merchantRefNum(MRN)
-                .txnType(TxnType.QR_PAY)
+                .txnType(TxnType.QrPay)
                 .txnRefNum("TXN10001")
                 .displayDesc("Order #12345")
                 .build();

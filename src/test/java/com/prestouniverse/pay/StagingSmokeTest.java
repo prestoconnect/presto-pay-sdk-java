@@ -31,7 +31,7 @@ class StagingSmokeTest {
 
         PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
                 .merchantRefNum(mrn)
-                .txnType(TxnType.WEB_PAY)
+                .txnType(TxnType.WebPay)
                 .txnRefNum(txnRefNum)
                 .displayDesc("SDK staging smoke")
                 .amount(100)

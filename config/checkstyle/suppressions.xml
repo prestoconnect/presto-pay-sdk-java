@@ -4,4 +4,7 @@
     "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <suppressions>
+    <!-- Wire-code holders: constant names intentionally match the gateway string value. -->
+    <suppress checks="ConstantName"
+              files="[\\/](NotifyEventCode|PaymentMethod|PaymentStatus|RefundStatus|ReversalStatus|TxnType)\.java$"/>
 </suppressions>

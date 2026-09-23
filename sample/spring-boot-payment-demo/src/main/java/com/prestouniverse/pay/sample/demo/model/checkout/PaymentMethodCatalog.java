@@ -13,11 +13,11 @@ public final class PaymentMethodCatalog {
 
     public static List<PaymentMethodChoice> selectableMethods() {
         return Collections.unmodifiableList(Arrays.asList(
-                new PaymentMethodChoice(PaymentMethod.PM_PG_CARD, "Credit / debit card", "Cards"),
-                new PaymentMethodChoice(PaymentMethod.TOUCH_N_GO_E_WALLET, "Touch 'n Go eWallet", "E-wallets"),
-                new PaymentMethodChoice(PaymentMethod.GRAB_PAY, "GrabPay", "E-wallets"),
-                new PaymentMethodChoice(PaymentMethod.MAYBANK, "Maybank FPX", "Online banking"),
-                new PaymentMethodChoice(PaymentMethod.CIMB, "CIMB Clicks", "Online banking"),
-                new PaymentMethodChoice(PaymentMethod.PUBLIC_BANK, "Public Bank", "Online banking")));
+                new PaymentMethodChoice(PaymentMethod.PmPgCard, "Credit / debit card", "Cards"),
+                new PaymentMethodChoice(PaymentMethod.TouchNGoEWallet, "Touch 'n Go eWallet", "E-wallets"),
+                new PaymentMethodChoice(PaymentMethod.GrabPay, "GrabPay", "E-wallets"),
+                new PaymentMethodChoice(PaymentMethod.Maybank, "Maybank FPX", "Online banking"),
+                new PaymentMethodChoice(PaymentMethod.Cimb, "CIMB Clicks", "Online banking"),
+                new PaymentMethodChoice(PaymentMethod.PublicBank, "Public Bank", "Online banking")));
     }
 }

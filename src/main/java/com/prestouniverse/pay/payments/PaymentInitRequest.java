@@ -298,7 +298,7 @@ public final class PaymentInitRequest {
                 throw new PrestoPayConfigException("currencyCode",
                         "currencyCode is required when amount is set");
             }
-            if (TxnType.WEB_PAY.equals(txnType) && redirectUrl == null) {
+            if (TxnType.WebPay.equals(txnType) && redirectUrl == null) {
                 throw new PrestoPayConfigException("redirectUrl",
                         "redirectUrl is required when txnType is WebPay");
             }

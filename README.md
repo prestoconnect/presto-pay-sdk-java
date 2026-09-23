@@ -31,7 +31,7 @@ PrestoPayClient client = PrestoPayClient.builder()
 
 PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
     .merchantRefNum("YOUR_PRESTO_MRN") // prestoMrn, required on every request
-    .txnType(TxnType.WEB_PAY)          // or any gateway string
+    .txnType(TxnType.WebPay)          // or any gateway string
     .txnRefNum("order-123")
     .displayDesc("Order 123")
     .amount(10_000)

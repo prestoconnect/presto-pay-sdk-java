@@ -94,7 +94,7 @@ public class WebPayCheckoutService {
             String txnRefNum) {
         return PaymentInitRequest.builder()
                 .merchantRefNum(prestoPayProperties.getMrn())
-                .txnType(TxnType.WEB_PAY)
+                .txnType(TxnType.WebPay)
                 .txnRefNum(txnRefNum)
                 .displayDesc(displayDesc)
                 .amount(amountMinorUnits)

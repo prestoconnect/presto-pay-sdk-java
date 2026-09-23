@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** constants in `NotifyEventCode`, `PaymentMethod`, `PaymentStatus`, `RefundStatus`, `ReversalStatus`, and `TxnType` are renamed so each name matches its gateway string value (e.g. `PaymentStatus.PENDING_AUTHORISE` → `PaymentStatus.PendingAuthorise`, `TxnType.WEB_PAY` → `TxnType.WebPay`, `PaymentMethod.PM_PG_CARD` → `PaymentMethod.PmPgCard`). Values are unchanged. `ErrorCode` keeps descriptive names because its values are numeric.
+
 ## [0.1.0] - 2026-09-23
 
 First public release.

@@ -38,7 +38,7 @@ public final class CheckoutViewAttributes {
         form.setPageTitle("Acme Store");
         form.setDisplayDesc("Self-hosted checkout — SDK sample");
         form.setAmountInRinggit(new BigDecimal("10.00"));
-        form.setSelectedPaymentMethod(PaymentMethod.PM_PG_CARD);
+        form.setSelectedPaymentMethod(PaymentMethod.PmPgCard);
         return form;
     }
 }

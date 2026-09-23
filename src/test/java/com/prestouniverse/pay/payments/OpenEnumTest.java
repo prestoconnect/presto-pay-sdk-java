@@ -8,18 +8,18 @@ class OpenEnumTest {
 
     @Test
     void paymentMethodConstantsMatchGatewayValues() {
-        assertEquals("Wallet", PaymentMethod.WALLET);
-        assertEquals("GrabPayLater", PaymentMethod.GRAB_PAY_LATER);
+        assertEquals("Wallet", PaymentMethod.Wallet);
+        assertEquals("GrabPayLater", PaymentMethod.GrabPayLater);
     }
 
     @Test
     void paymentStatusConstantsMatchGatewayValues() {
-        assertEquals("Authorised", PaymentStatus.AUTHORISED);
+        assertEquals("Authorised", PaymentStatus.Authorised);
     }
 
     @Test
     void txnTypeConstantsMatchGatewayValues() {
-        assertEquals("WebPay", TxnType.WEB_PAY);
-        assertEquals("QrPay", TxnType.QR_PAY);
+        assertEquals("WebPay", TxnType.WebPay);
+        assertEquals("QrPay", TxnType.QrPay);
     }
 }

@@ -127,8 +127,8 @@ public final class NotifyEvent {
      * authoritative payment status after handling a webhook.
      */
     public String paymentStatus() {
-        if (NotifyEventCode.AUTHORISED.equals(eventCode)) {
-            return success() ? PaymentStatus.AUTHORISED : PaymentStatus.FAILED;
+        if (NotifyEventCode.Authorised.equals(eventCode)) {
+            return success() ? PaymentStatus.Authorised : PaymentStatus.Failed;
         }
         return eventCode;
     }
