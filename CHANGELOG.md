@@ -7,21 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- `PaymentMethod.ApplePay`, `PaymentMethod.GooglePay`, and `PaymentMethod.DuitNowQR`.
-
-### Changed
-
-- **Breaking:** constants in `NotifyEventCode`, `PaymentMethod`, `PaymentStatus`, `RefundStatus`, `ReversalStatus`, and `TxnType` are renamed so each name matches its gateway string value (e.g. `PaymentStatus.PENDING_AUTHORISE` → `PaymentStatus.PendingAuthorise`, `TxnType.WEB_PAY` → `TxnType.WebPay`, `PaymentMethod.PM_PG_CARD` → `PaymentMethod.PmPgCard`). Values are unchanged. `ErrorCode` keeps descriptive names because its values are numeric.
-
-## [0.1.0] - 2026-09-23
+## [0.1.0] - 2026-09-25
 
 First public release.
 
 ### Added
 
 - README with integration guide, error handling, and webhook contract.
+- `PaymentMethod.ApplePay`, `PaymentMethod.GooglePay`, and `PaymentMethod.DuitNowQR`.
 - Apache 2.0 LICENSE file.
 - GitHub Actions CI running `mvn verify`.
 - `SdkVersion` and JAR `Implementation-Version` for accurate `User-Agent` headers.
@@ -66,6 +59,7 @@ First public release.
 - Removed `Environment.custom(String)`; use `PrestoPayClient.Builder.baseUrl(...)`.
 - `RetryPolicy.of` throws `PrestoPayConfigException` (was `IllegalArgumentException`) and rejects a null or negative backoff.
 - Lists returned by `PaymentQueryResponse` and `NotifyEvent` are unmodifiable.
+- Constants in `NotifyEventCode`, `PaymentMethod`, `PaymentStatus`, `RefundStatus`, `ReversalStatus`, and `TxnType` are renamed so each name matches its gateway string value (e.g. `PaymentStatus.PENDING_AUTHORISE` → `PaymentStatus.PendingAuthorise`, `TxnType.WEB_PAY` → `TxnType.WebPay`, `PaymentMethod.PM_PG_CARD` → `PaymentMethod.PmPgCard`). Values are unchanged. `ErrorCode` keeps descriptive names because its values are numeric.
 
 [Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/prestoconnect/presto-pay-sdk-java/releases/tag/v0.1.0
