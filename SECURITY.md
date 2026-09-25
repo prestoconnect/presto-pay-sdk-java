@@ -12,7 +12,7 @@ Security fixes are released for the latest minor version of `presto-pay-sdk`.
 
 Please **do not** open a public issue for security problems.
 
-Report privately through [GitHub private vulnerability reporting](https://github.com/prestouniverse/presto-pay-sdk/security/advisories/new). Include:
+Report privately through [GitHub private vulnerability reporting](https://github.com/prestoconnect/presto-pay-sdk-java/security/advisories/new). Include:
 
 - the SDK version and Java version;
 - what an attacker could do, and under which configuration;

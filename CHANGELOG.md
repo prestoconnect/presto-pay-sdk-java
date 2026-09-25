@@ -67,5 +67,5 @@ First public release.
 - `RetryPolicy.of` throws `PrestoPayConfigException` (was `IllegalArgumentException`) and rejects a null or negative backoff.
 - Lists returned by `PaymentQueryResponse` and `NotifyEvent` are unmodifiable.
 
-[Unreleased]: https://github.com/prestouniverse/presto-pay-sdk/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/prestouniverse/presto-pay-sdk/releases/tag/v0.1.0
+[Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/prestoconnect/presto-pay-sdk-java/releases/tag/v0.1.0

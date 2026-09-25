@@ -15,7 +15,7 @@
     gateway: typed request/response models, request signing, response and
     webhook verification, and key management.
   </description>
-  <url>https://github.com/prestouniverse/presto-pay-sdk</url>
+  <url>https://github.com/prestoconnect/presto-pay-sdk-java</url>
 
   <licenses>
     <license>
@@ -26,21 +26,21 @@
 
   <organization>
     <name>Presto Universe</name>
-    <url>https://github.com/prestouniverse</url>
+    <url>https://github.com/prestoconnect</url>
   </organization>
 
   <developers>
     <developer>
       <name>Presto Universe</name>
       <organization>Presto Universe</organization>
-      <organizationUrl>https://github.com/prestouniverse</organizationUrl>
+      <organizationUrl>https://github.com/prestoconnect</organizationUrl>
     </developer>
   </developers>
 
   <scm>
-    <url>https://github.com/prestouniverse/presto-pay-sdk</url>
-    <connection>scm:git:https://github.com/prestouniverse/presto-pay-sdk.git</connection>
-    <developerConnection>scm:git:https://github.com/prestouniverse/presto-pay-sdk.git</developerConnection>
+    <url>https://github.com/prestoconnect/presto-pay-sdk-java</url>
+    <connection>scm:git:https://github.com/prestoconnect/presto-pay-sdk-java.git</connection>
+    <developerConnection>scm:git:https://github.com/prestoconnect/presto-pay-sdk-java.git</developerConnection>
   </scm>
 
   <properties>
