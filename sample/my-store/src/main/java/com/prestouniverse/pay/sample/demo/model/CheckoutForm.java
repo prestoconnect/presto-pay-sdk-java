@@ -1,4 +1,4 @@
-package com.prestouniverse.pay.sample.demo.model.checkout;
+package com.prestouniverse.pay.sample.demo.model;
 
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;

@@ -8,7 +8,7 @@ import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.payments.TxnType;
 import com.prestouniverse.pay.sample.demo.config.AppProperties;
 import com.prestouniverse.pay.sample.demo.config.PrestoPayProperties;
-import com.prestouniverse.pay.sample.demo.model.checkout.CheckoutForm;
+import com.prestouniverse.pay.sample.demo.model.CheckoutForm;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore.CheckoutRecord;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore.SelfHostedCheckoutSnapshot;

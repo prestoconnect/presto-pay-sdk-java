@@ -3,7 +3,8 @@
 ## MyStore
 
 [`my-store/`](my-store/) — a **MyStore**-branded checkout page against
-**Presto staging**, styled with Tailwind CSS (Play CDN) and Font Awesome icons.
+**Presto staging**, styled with Tailwind CSS (Play CDN) and Font Awesome icons, with jQuery driving the
+page's JSON checkout calls.
 
 ### Staging credentials
 
@@ -31,12 +32,22 @@ Any value can also come from `PRESTOPAY_*` environment variables. If **all** of 
 ### Checkout UI
 
 One page ([`/`](http://localhost:8080/), `HomeController`) with a **"Show payment methods on checkout"**
-toggle that switches between the two ways to call `init`, both posting to the same `POST /checkout`:
+toggle that switches between the two ways to call `init`, both driven by the page's own JavaScript calling
+a JSON `POST /checkout` (not a browser form post):
 
 | Toggle | Experience | SDK |
 |--------|------------|-----|
 | Off (default) | Amount + description → Presto hosted page | `init` without `allowedPaymentMethods` |
 | On | Payment method list shown on this page first | `init` with `allowedPaymentMethods(...)` |
+
+`POST /checkout` accepts a JSON `CheckoutForm` body and returns:
+
+- `200` `{"paymentUrl": "...", "txnRefNum": "..."}` on success — the page redirects the browser to
+  `paymentUrl` (or to `/return/{txnRefNum}` if Presto returned none)
+- `400` with a field-name → message map on validation failure (e.g. `{"amountInRinggit": "Amount must be at
+  least 0.01"}`)
+- `502` with `{"message": "...", ...}` on a gateway failure (signature, transport, or API error) — see
+  `CheckoutExceptionHandler`
 
 `GET /return/{txnRefNum}` shows the payment result (queries `payments().query()` for authoritative status).
 
@@ -48,8 +59,8 @@ com.prestouniverse.pay.sample.demo
 ├── config/              AppProperties, PrestoPayProperties, PrestoPayConfiguration
 ├── controller/          HomeController (GET / and POST /checkout), ReturnController, WebhookController
 │   ├── handler/         CheckoutExceptionHandler
-│   └── support/         CheckoutViewAttributes, PaymentInitRedirect
-├── model/checkout/      CheckoutForm, CheckoutFlow, PaymentMethodCatalog
+│   └── support/         CheckoutViewAttributes, CheckoutResponse
+├── model/checkout/      CheckoutForm (payment methods are static data in the page's own JavaScript)
 ├── service/             WebPayCheckoutService
 │   └── support/         CheckoutAmounts, DemoTxnReferenceGenerator
 └── repository/          PaymentActivityStore

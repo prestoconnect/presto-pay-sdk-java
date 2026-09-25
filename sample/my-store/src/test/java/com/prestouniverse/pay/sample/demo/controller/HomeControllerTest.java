@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -24,8 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Renders the real {@code index.html} through Spring MVC + Thymeleaf (not just a Java-level unit test)
  * so that {@code th:field}/{@code th:object} binding, the payment method loop, and the category pills
- * are exercised the same way a browser request would; and exercises the one {@code /checkout} submit
- * endpoint's validation-error redisplay for both the hidden-methods and shown-methods paths.
+ * are exercised the same way a browser request would; and exercises the JSON {@code POST /checkout} API's
+ * validation-error responses for both the hidden-methods and shown-methods paths.
  */
 @WebMvcTest(controllers = HomeController.class)
 @Import(HomeControllerTest.TestBeans.class)
@@ -44,9 +45,20 @@ class HomeControllerTest {
                 .andExpect(view().name("index"))
                 .andExpect(content().string(containsString("MyStore")))
                 .andExpect(content().string(containsString("id=\"showPaymentMethods\"")))
-                .andExpect(content().string(containsString("action=\"/checkout\"")))
                 .andExpect(content().string(containsString("Continue to Payment")))
                 .andExpect(content().string(containsString("Choose Payment Method")))
+                .andExpect(content().string(containsString("src=\"/js/checkout.js\"")));
+    }
+
+    /**
+     * The payment method list is static data in {@code checkout.js}, not server-rendered; this confirms
+     * the file is actually reachable at the path {@code index.html} references, and that Spring Boot's
+     * static resource handling (registered for {@code classpath:/static/}) is wired up for this module.
+     */
+    @Test
+    void checkoutJavaScriptIsServedWithThePaymentMethodData() throws Exception {
+        mockMvc.perform(get("/js/checkout.js"))
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Credit / debit card")));
     }
 
@@ -68,32 +80,29 @@ class HomeControllerTest {
     }
 
     @Test
-    void invalidAmountRedisplaysIndexWithError() throws Exception {
+    void invalidAmountReturnsBadRequestWithFieldError() throws Exception {
         mockMvc.perform(post("/checkout")
-                        .param("displayDesc", "Order")
-                        .param("amountInRinggit", "0"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("index"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayDesc\":\"Order\",\"amountInRinggit\":\"0\",\"showPaymentMethods\":false}"))
+                .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Amount must be at least 0.01")));
     }
 
     @Test
-    void missingPaymentMethodRedisplaysIndexWithErrorWhenMethodsShown() throws Exception {
+    void missingPaymentMethodReturnsBadRequestWhenMethodsShown() throws Exception {
         mockMvc.perform(post("/checkout")
-                        .param("displayDesc", "Order")
-                        .param("amountInRinggit", "10.00")
-                        .param("showPaymentMethods", "true")
-                        .param("selectedPaymentMethod", ""))
-                .andExpect(status().isOk())
-                .andExpect(view().name("index"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayDesc\":\"Order\",\"amountInRinggit\":\"10.00\","
+                                + "\"showPaymentMethods\":true,\"selectedPaymentMethod\":\"\"}"))
+                .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Select a payment method")));
     }
 
     @Test
     void hiddenMethodsSubmissionDoesNotRequireASelectedMethod() throws Exception {
         mockMvc.perform(post("/checkout")
-                        .param("displayDesc", "Order")
-                        .param("amountInRinggit", "0"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayDesc\":\"Order\",\"amountInRinggit\":\"0\",\"showPaymentMethods\":false}"))
                 .andExpect(content().string(not(containsString("Select a payment method"))));
     }
 

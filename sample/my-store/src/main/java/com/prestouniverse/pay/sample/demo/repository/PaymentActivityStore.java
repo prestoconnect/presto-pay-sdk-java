@@ -1,7 +1,6 @@
 package com.prestouniverse.pay.sample.demo.repository;
 
 import com.prestouniverse.pay.payments.PaymentInitResponse;
-import com.prestouniverse.pay.sample.demo.model.checkout.CheckoutFlow;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -44,7 +43,6 @@ public class PaymentActivityStore {
     public static final class CheckoutRecord {
 
         private final String txnRefNum;
-        private final CheckoutFlow checkoutFlow;
         private final String displayDesc;
         private final String pageTitle;
         private final int amountMinorUnits;
@@ -56,11 +54,10 @@ public class PaymentActivityStore {
         private final String paymentStatus;
         private final Instant initiatedAt;
 
-        private CheckoutRecord(String txnRefNum, CheckoutFlow checkoutFlow, String displayDesc, String pageTitle,
+        private CheckoutRecord(String txnRefNum, String displayDesc, String pageTitle,
                 int amountMinorUnits, String currencyCode, String selectedPaymentMethod, String receiptName,
                 String receiptEmail, String paymentRefNum, String paymentStatus, Instant initiatedAt) {
             this.txnRefNum = txnRefNum;
-            this.checkoutFlow = checkoutFlow;
             this.displayDesc = displayDesc;
             this.pageTitle = pageTitle;
             this.amountMinorUnits = amountMinorUnits;
@@ -75,29 +72,25 @@ public class PaymentActivityStore {
 
         public static CheckoutRecord forHostedInit(String txnRefNum, String displayDesc, int amountMinorUnits,
                 String currencyCode) {
-            return new CheckoutRecord(txnRefNum, CheckoutFlow.HOSTED, displayDesc, null, amountMinorUnits,
+            return new CheckoutRecord(txnRefNum, displayDesc, null, amountMinorUnits,
                     currencyCode, null, null, null, null, null, Instant.now());
         }
 
         public static CheckoutRecord forSelfHostedInit(String txnRefNum, SelfHostedCheckoutSnapshot form,
                 int amountMinorUnits, String currencyCode) {
-            return new CheckoutRecord(txnRefNum, CheckoutFlow.SELF_HOSTED, form.displayDesc, form.pageTitle,
+            return new CheckoutRecord(txnRefNum, form.displayDesc, form.pageTitle,
                     amountMinorUnits, currencyCode, form.selectedPaymentMethod, form.receiptName, form.receiptEmail,
                     null, null, Instant.now());
         }
 
         public CheckoutRecord afterSuccessfulInit(PaymentInitResponse initResponse) {
-            return new CheckoutRecord(initResponse.txnRefNum(), checkoutFlow, displayDesc, pageTitle, amountMinorUnits,
+            return new CheckoutRecord(initResponse.txnRefNum(), displayDesc, pageTitle, amountMinorUnits,
                     currencyCode, selectedPaymentMethod, receiptName, receiptEmail, initResponse.paymentRefNum(),
                     initResponse.paymentStatus(), initiatedAt);
         }
 
         public String getTxnRefNum() {
             return txnRefNum;
-        }
-
-        public CheckoutFlow getCheckoutFlow() {
-            return checkoutFlow;
         }
 
         public String getDisplayDesc() {

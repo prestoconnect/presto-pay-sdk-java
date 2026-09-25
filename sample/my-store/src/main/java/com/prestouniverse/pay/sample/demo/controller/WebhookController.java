@@ -45,6 +45,11 @@ public class WebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
+        // event.paymentStatus() other than PaymentStatus.PendingAuthorise means Presto has finalised
+        // this payment. This webhook and the payer's browser redirect to /return/{txnRefNum} are
+        // triggered independently by Presto and can arrive in either order, or at nearly the same
+        // time -- treat the update here as an idempotent upsert keyed by txnRefNum, not a step that
+        // must happen before or after the return page loads.
         log.info("Webhook verified eventCode={} paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
                         + "amount={} {} eventRefNum={}",
                 event.eventCode(),
