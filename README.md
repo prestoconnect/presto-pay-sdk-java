@@ -1,10 +1,35 @@
 # Presto Pay SDK
 
-Standalone, framework-agnostic Java library for the Presto Connect payment gateway: typed requests and responses, RSA request signing, response and webhook verification, and PKCS#12 / X.509 key loading.
+[![Maven Central](https://img.shields.io/maven-central/v/com.prestouniverse/presto-pay-sdk.svg)](https://central.sonatype.com/artifact/com.prestouniverse/presto-pay-sdk)
+[![Javadoc](https://javadoc.io/badge2/com.prestouniverse/presto-pay-sdk/javadoc.svg)](https://javadoc.io/doc/com.prestouniverse/presto-pay-sdk)
+[![CI](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml/badge.svg)](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-- **Java 8+**
+Standalone, framework-agnostic Java library for the **Presto Connect** payment gateway. It handles the parts
+that are easy to get subtly wrong when integrating a signed payment API by hand: typed request/response
+models, RSA request signing, response and webhook signature verification, and PKCS#12 / X.509 key loading.
+
+- **Java 8+** — no required framework; Spring wiring is one optional file, not a dependency
 - **Zero runtime dependencies** (JUnit is test-only)
 - **Thread-safe** `PrestoPayClient` — build once, share across threads
+
+## Contents
+
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Merchant identity](#merchant-identity)
+- [Configuration from environment](#configuration-from-environment)
+- [Retries and idempotency](#retries-and-idempotency)
+- [Webhooks](#webhooks)
+- [Errors](#errors)
+- [Custom HTTP client](#custom-http-client)
+- [Debugging signatures](#debugging-signatures)
+- [Spring wiring](#spring-wiring)
+- [Samples](#samples)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Install
 
 Maven:
 
@@ -43,7 +68,7 @@ PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
 String paymentUrl = init.paymentUrl();
 ```
 
-### Merchant identity
+## Merchant identity
 
 A client belongs to one merchant: `merchantId` (`mid`) is required on the builder, sent on every request, and `client.webhooks()` rejects events for any other `mid`. `merchantRefNum` (`prestoMrn`) is set per request, so one client can use several `prestoMrn`s under its `mid`; each `*Request.build()` throws `PrestoPayConfigException` if it is missing or blank.
 
@@ -67,7 +92,7 @@ PrestoPayClient client = PrestoPayClient.fromEnv();
 
 For production, prefer the builder with keys from your secret store and `char[]` passwords instead of environment strings when possible.
 
-## Init timeout and idempotency
+## Retries and idempotency
 
 `init`, `reverse`, and `refund` are **not** safely retried after the HTTP request may have reached Presto. The default retry policy only retries those operations when `PrestoPayTransportException.requestNotSent()` is true.
 
@@ -141,31 +166,6 @@ For full reference implementations backed by Spring's `RestClient`, the JDK 11+ 
 
 Use `Canonicalizer.canonicalizeJson(jsonString)` to reproduce the gateway canonical string from raw JSON. Avoid depending on types under `com.prestouniverse.pay.internal` — they are not semver-stable.
 
-## Building and testing
-
-The Maven wrapper pins Maven 3.9.9 (use `mvnw.cmd` on Windows):
-
-```bash
-./mvnw verify
-```
-
-Optional live staging smoke (requires real staging credentials):
-
-```bash
-export PRESTOPAY_STAGING_SMOKE=1
-# plus PRESTOPAY_ENV, PRESTOPAY_MID, PRESTOPAY_MRN, keystore, and public key variables
-./mvnw verify -Pstaging-smoke
-```
-
-Release artifacts (sources + Javadoc): `./mvnw verify -Prelease`.
-
-### Releasing
-
-1. Set `<version>` in `pom.xml` (no `-SNAPSHOT`) and move the CHANGELOG `Unreleased` entries under that version.
-2. Commit, then push a matching tag, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
-3. The `Release` workflow verifies, signs, and uploads to the Maven Central Portal. The deployment waits there until someone clicks **Publish** (set `central.autoPublish=true` to skip that).
-4. Bump `pom.xml` to the next `-SNAPSHOT` version.
-
 ## Spring wiring
 
 See [docs/spring-wiring.md](docs/spring-wiring.md) for a minimal `@Configuration` example.
@@ -176,6 +176,10 @@ See [docs/spring-wiring.md](docs/spring-wiring.md) for a minimal `@Configuration
 - [sample/custom-transport-demo/](sample/custom-transport-demo/) — reference `HttpTransport` implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp.
 
 See [sample/README.md](sample/README.md) for details on both.
+
+## Contributing
+
+Building, testing, code style, and the release process live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
