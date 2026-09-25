@@ -135,6 +135,8 @@ HttpTransport logging = (request, connectTimeout, readTimeout) -> {
 
 A custom transport must return non-2xx responses rather than throw, must not follow redirects or resend requests, and must throw `PrestoPayTransportException` with `requestNotSent = true` only when the request certainly never left the process. The SDK's retry safety for `init`, `reverse`, and `refund` depends on that flag being accurate.
 
+For full reference implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, see [sample/custom-transport-demo](sample/custom-transport-demo).
+
 ## Debugging signatures
 
 Use `Canonicalizer.canonicalizeJson(jsonString)` to reproduce the gateway canonical string from raw JSON. Avoid depending on types under `com.prestouniverse.pay.internal` — they are not semver-stable.
