@@ -123,7 +123,7 @@ public final class NotifyEvent {
 
     /**
      * Suggested {@link com.prestouniverse.pay.payments.PaymentStatus} value from this notify event.
-     * For {@link NotifyEventCode#AUTHORISED}, uses {@link #success()}. Call {@code payments().query()} for
+     * For {@link NotifyEventCode#Authorised}, uses {@link #success()}. Call {@code payments().query()} for
      * authoritative payment status after handling a webhook.
      */
     public String paymentStatus() {
