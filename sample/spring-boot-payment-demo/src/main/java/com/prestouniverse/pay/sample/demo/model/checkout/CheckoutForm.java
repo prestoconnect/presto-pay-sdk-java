@@ -7,11 +7,12 @@ import javax.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-public class SelfHostedCheckoutForm {
-
-    @NotBlank
-    @Size(max = 80)
-    private String pageTitle;
+/**
+ * The single checkout form backing the one {@code /checkout} submit endpoint. {@code showPaymentMethods}
+ * mirrors the page's toggle: off sends no {@code allowedPaymentMethods} (the payer chooses on Presto's
+ * hosted page); on requires {@code selectedPaymentMethod} and sends it as {@code allowedPaymentMethods}.
+ */
+public class CheckoutForm {
 
     @NotBlank
     @Size(max = 200)
@@ -21,8 +22,12 @@ public class SelfHostedCheckoutForm {
     @DecimalMin(value = "0.01", message = "Amount must be at least 0.01")
     private BigDecimal amountInRinggit;
 
-    /** Gateway wire value sent as {@code allowedPaymentMethods} on init. */
-    @NotBlank
+    private boolean showPaymentMethods;
+
+    @Size(max = 80)
+    private String pageTitle;
+
+    /** Gateway wire value sent as {@code allowedPaymentMethods}; required only when {@code showPaymentMethods}. */
     private String selectedPaymentMethod;
 
     @Size(max = 200)
@@ -30,14 +35,6 @@ public class SelfHostedCheckoutForm {
 
     @Size(max = 320)
     private String receiptEmail;
-
-    public String getPageTitle() {
-        return pageTitle;
-    }
-
-    public void setPageTitle(String pageTitle) {
-        this.pageTitle = pageTitle;
-    }
 
     public String getDisplayDesc() {
         return displayDesc;
@@ -53,6 +50,22 @@ public class SelfHostedCheckoutForm {
 
     public void setAmountInRinggit(BigDecimal amountInRinggit) {
         this.amountInRinggit = amountInRinggit;
+    }
+
+    public boolean isShowPaymentMethods() {
+        return showPaymentMethods;
+    }
+
+    public void setShowPaymentMethods(boolean showPaymentMethods) {
+        this.showPaymentMethods = showPaymentMethods;
+    }
+
+    public String getPageTitle() {
+        return pageTitle;
+    }
+
+    public void setPageTitle(String pageTitle) {
+        this.pageTitle = pageTitle;
     }
 
     public String getSelectedPaymentMethod() {

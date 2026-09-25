@@ -26,8 +26,7 @@ public class DemoStartupLogging implements ApplicationListener<ApplicationReadyE
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         log.info("Presto Pay demo ready on port {}", serverPort);
-        log.info("Checkout: hosted=http://localhost:{}/hosted selfHosted=http://localhost:{}/self-hosted",
-                serverPort, serverPort);
+        log.info("Checkout: http://localhost:{}/", serverPort);
         log.info("Gateway: env={} mid={} prestoMrn={}",
                 prestoPayProperties.getEnvironment(),
                 prestoPayProperties.getMid(),

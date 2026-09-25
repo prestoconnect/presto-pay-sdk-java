@@ -8,8 +8,7 @@ import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.payments.TxnType;
 import com.prestouniverse.pay.sample.demo.config.AppProperties;
 import com.prestouniverse.pay.sample.demo.config.PrestoPayProperties;
-import com.prestouniverse.pay.sample.demo.model.checkout.HostedCheckoutForm;
-import com.prestouniverse.pay.sample.demo.model.checkout.SelfHostedCheckoutForm;
+import com.prestouniverse.pay.sample.demo.model.checkout.CheckoutForm;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore.CheckoutRecord;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore.SelfHostedCheckoutSnapshot;
@@ -38,39 +37,34 @@ public class WebPayCheckoutService {
         this.activityStore = activityStore;
     }
 
-    public PaymentInitResponse checkout(HostedCheckoutForm form) {
+    public PaymentInitResponse checkout(CheckoutForm form) {
         String txnRefNum = DemoTxnReferenceGenerator.next();
         int amountMinorUnits = CheckoutAmounts.toMinorUnits(form.getAmountInRinggit());
         String displayDesc = form.getDisplayDesc().trim();
 
-        log.info("Initiating hosted WebPay txnRefNum={} amountMinorUnits={} currency={} displayDesc={}",
-                txnRefNum, amountMinorUnits, appProperties.getDefaultCurrency(), displayDesc);
+        PaymentInitRequest.Builder initRequest = buildWebPayInitRequest(displayDesc, amountMinorUnits, txnRefNum);
+        CheckoutRecord pendingRecord;
 
-        CheckoutRecord pendingRecord = CheckoutRecord.forHostedInit(txnRefNum, displayDesc, amountMinorUnits,
-                appProperties.getDefaultCurrency());
+        if (form.isShowPaymentMethods()) {
+            String selectedMethod = form.getSelectedPaymentMethod().trim();
+            log.info("Initiating self-hosted WebPay txnRefNum={} amountMinorUnits={} currency={} "
+                            + "allowedPaymentMethods={} displayDesc={}",
+                    txnRefNum, amountMinorUnits, appProperties.getDefaultCurrency(), selectedMethod, displayDesc);
 
-        return doInit(buildWebPayInitRequest(displayDesc, amountMinorUnits, txnRefNum), pendingRecord);
-    }
+            initRequest.allowedPaymentMethods(selectedMethod);
+            applyOptionalReceiptFields(initRequest, form);
 
-    public PaymentInitResponse checkout(SelfHostedCheckoutForm form) {
-        String txnRefNum = DemoTxnReferenceGenerator.next();
-        int amountMinorUnits = CheckoutAmounts.toMinorUnits(form.getAmountInRinggit());
-        String displayDesc = form.getDisplayDesc().trim();
-        String selectedMethod = form.getSelectedPaymentMethod().trim();
+            pendingRecord = CheckoutRecord.forSelfHostedInit(txnRefNum,
+                    new SelfHostedCheckoutSnapshot(form.getPageTitle(), displayDesc, selectedMethod,
+                            form.getReceiptName(), form.getReceiptEmail()),
+                    amountMinorUnits, appProperties.getDefaultCurrency());
+        } else {
+            log.info("Initiating hosted WebPay txnRefNum={} amountMinorUnits={} currency={} displayDesc={}",
+                    txnRefNum, amountMinorUnits, appProperties.getDefaultCurrency(), displayDesc);
 
-        log.info("Initiating self-hosted WebPay txnRefNum={} amountMinorUnits={} currency={} "
-                        + "allowedPaymentMethods={} displayDesc={}",
-                txnRefNum, amountMinorUnits, appProperties.getDefaultCurrency(), selectedMethod, displayDesc);
-
-        PaymentInitRequest.Builder initRequest = buildWebPayInitRequest(displayDesc, amountMinorUnits, txnRefNum)
-                .allowedPaymentMethods(selectedMethod);
-
-        applyOptionalReceiptFields(initRequest, form);
-
-        CheckoutRecord pendingRecord = CheckoutRecord.forSelfHostedInit(txnRefNum,
-                new SelfHostedCheckoutSnapshot(form.getPageTitle(), displayDesc, selectedMethod,
-                        form.getReceiptName(), form.getReceiptEmail()),
-                amountMinorUnits, appProperties.getDefaultCurrency());
+            pendingRecord = CheckoutRecord.forHostedInit(txnRefNum, displayDesc, amountMinorUnits,
+                    appProperties.getDefaultCurrency());
+        }
 
         return doInit(initRequest, pendingRecord);
     }
@@ -103,8 +97,7 @@ public class WebPayCheckoutService {
                 .redirectUrl(appProperties.returnUrlForTransaction(txnRefNum));
     }
 
-    private static void applyOptionalReceiptFields(PaymentInitRequest.Builder initRequest,
-            SelfHostedCheckoutForm form) {
+    private static void applyOptionalReceiptFields(PaymentInitRequest.Builder initRequest, CheckoutForm form) {
         if (StringUtils.hasText(form.getReceiptName())) {
             initRequest.receiptName(form.getReceiptName().trim());
         }

@@ -3,99 +3,125 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Return from Presto</title>
-  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <title>Payment result</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 </head>
-<body>
-<div class="wrap">
-  <header class="demo-header">
-    <h1>Back from Presto</h1>
-    <p>
-      After redirect, this page calls <code>payments().query()</code> for authoritative status.
-      Webhooks posted to <code>/presto/notify</code> are listed below when received.
-    </p>
-  </header>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-900">
+<div class="mx-auto max-w-md px-4 py-8">
 
-  <div class="card" th:if="${missingTxnRefNum}">
-    <p>
+  <section class="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm" th:if="${missingTxnRefNum}">
+    <p class="text-left text-sm text-slate-600">
       The return URL must include the merchant transaction reference as a path segment
-      (for example <code>/return/demo-abc123</code>). That value is set on payment
-      <code>init</code> via <code>redirectUrl</code>. Start a payment from the
-      <a th:href="@{/}">checkout demo</a> so Presto redirects back with the correct reference.
+      (for example <code class="rounded bg-slate-100 px-1 py-0.5 text-xs">/return/demo-abc123</code>). That value
+      is set on payment <code class="rounded bg-slate-100 px-1 py-0.5 text-xs">init</code> via
+      <code class="rounded bg-slate-100 px-1 py-0.5 text-xs">redirectUrl</code>. Start a payment from the
+      <a class="font-semibold text-indigo-600 hover:text-indigo-700" th:href="@{/}">checkout demo</a> so Presto
+      redirects back with the correct reference.
     </p>
-  </div>
+  </section>
 
-  <div class="grid" th:if="${txnRefNum != null}" style="grid-template-columns: 1fr;">
-    <section class="card">
-      <h2>Transaction</h2>
-      <ul class="meta-list">
-        <li><span>Txn ref</span><span th:text="${txnRefNum}">demo-</span></li>
-        <li th:if="${checkout != null}">
-          <span>Checkout UI</span>
-          <span th:text="${checkout.checkoutFlow}">HOSTED</span>
-        </li>
-        <li th:if="${checkout != null and checkout.pageTitle != null}">
-          <span>Page title</span>
-          <span th:text="${checkout.pageTitle}">Acme</span>
-        </li>
-        <li th:if="${checkout != null and checkout.selectedPaymentMethod != null}">
-          <span>Selected method</span>
-          <span th:text="${checkout.selectedPaymentMethod}">PmPgCard</span>
-        </li>
-      </ul>
-    </section>
+  <section class="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm" th:if="${txnRefNum != null}">
 
-    <section class="card" th:if="${queryError != null}">
-      <h2>Query failed</h2>
-      <p class="hint" th:if="${querySignatureError}">
+    <div th:if="${queryError != null}">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-2xl text-white">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </div>
+      <h1 class="mb-2 text-xl font-bold">Could not confirm payment</h1>
+      <p class="mb-4 text-sm text-slate-500" th:text="${queryError}">error</p>
+      <p class="text-xs text-slate-500" th:if="${querySignatureError}">
         Response signature verification failed (<span th:text="${signatureSide}">RESPONSE</span>).
         Confirm the Presto public key in config matches the environment.
       </p>
-      <p class="hint" th:text="${queryError}">error</p>
-    </section>
+    </div>
 
-    <section class="card" th:if="${query != null}">
-      <h2>Query result</h2>
-      <ul class="meta-list">
-        <li><span>Status</span><span class="status-pill" th:text="${query.paymentStatus()}">Pending</span></li>
-        <li><span>Payment ref</span><span th:text="${query.paymentRefNum()}">PRN</span></li>
-        <li><span>Amount</span><span th:text="${query.amount()} + ' ' + ${query.currencyCode()}">1000 MYR</span></li>
-        <li th:if="${query.paymentFinalisedDate() != null}">
-          <span>Finalised</span><span th:text="${query.paymentFinalisedDate()}">date</span>
+    <div th:if="${query != null}"
+         th:with="status=${query.paymentStatus()},
+                   isSuccess=${status == 'Authorised' or status == 'Refunded'},
+                   isPending=${status == 'PendingAuthorise' or status == 'PendingReverse' or status == 'PendingRefund'},
+                   isFailed=${status == 'Failed' or status == 'Cancelled' or status == 'Expired'}">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full text-2xl text-white"
+           th:classappend="${isSuccess} ? ' bg-green-600' : (${isPending} ? ' bg-amber-500' : (${isFailed} ? ' bg-red-600' : ' bg-slate-500'))">
+        <i aria-hidden="true"
+           th:class="${isSuccess} ? 'fa-solid fa-check' : (${isPending} ? 'fa-solid fa-clock' : (${isFailed} ? 'fa-solid fa-xmark' : 'fa-solid fa-circle-info'))"></i>
+      </div>
+
+      <h1 class="mb-2 text-xl font-bold"
+          th:text="${isSuccess} ? 'Payment Successful' : (${isPending} ? 'Payment Pending' : (${isFailed} ? 'Payment Failed' : 'Payment ' + ${status}))">
+        Payment Successful
+      </h1>
+      <p class="mb-5">
+        <span class="inline-block rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs text-slate-700"
+              th:text="${status}">Authorised</span>
+      </p>
+
+      <ul class="mb-5 text-left text-sm">
+        <li class="flex justify-between gap-4 border-b border-slate-200 py-2">
+          <span class="text-slate-500">Amount</span>
+          <span class="font-semibold"
+                th:text="'RM ' + ${#numbers.formatDecimal(query.amount() / 100.0, 1, 'COMMA', 2, 'POINT')}">RM 100.00</span>
+        </li>
+        <li class="flex justify-between gap-4 border-b border-slate-200 py-2"
+            th:if="${checkout != null and checkout.displayDesc != null}">
+          <span class="text-slate-500">Description</span>
+          <span class="font-semibold" th:text="${checkout.displayDesc}">Top up order #12345</span>
+        </li>
+        <li class="flex justify-between gap-4 border-b border-slate-200 py-2"
+            th:if="${!#lists.isEmpty(query.paymentDetails())}" th:with="detail=${query.paymentDetails()[0]}">
+          <span class="text-slate-500">Payment Method</span>
+          <span class="font-semibold"
+                th:text="${detail.cardSummary() != null} ? ${detail.method()} + ' &bull; ' + ${detail.cardSummary()} : ${detail.method()}">
+            Visa •••• 4242
+          </span>
+        </li>
+        <li class="flex justify-between gap-4 border-b border-slate-200 py-2"
+            th:if="${#lists.isEmpty(query.paymentDetails()) and checkout != null and checkout.selectedPaymentMethod != null}">
+          <span class="text-slate-500">Payment Method</span>
+          <span class="font-semibold" th:text="${checkout.selectedPaymentMethod}">PmPgCard</span>
+        </li>
+        <li class="flex justify-between gap-4 border-b border-slate-200 py-2">
+          <span class="text-slate-500">Transaction ID</span>
+          <span class="font-semibold" th:text="${query.paymentRefNum()}">MP123456789</span>
+        </li>
+        <li class="flex justify-between gap-4 py-2" th:if="${query.paymentFinalisedDate() != null}">
+          <span class="text-slate-500">Payment Time</span>
+          <span class="font-semibold" th:text="${query.paymentFinalisedDate()}">date</span>
         </li>
       </ul>
-      <a class="btn btn-ghost" th:href="@{/return/{txnRefNum}(txnRefNum=${txnRefNum})}" style="margin-top:1rem;">Refresh query</a>
-    </section>
-  </div>
 
-  <section class="panel" th:if="${!#lists.isEmpty(recentWebhooks)}">
-    <h3>Recent webhooks</h3>
-    <table class="feed">
-      <thead>
-      <tr>
-        <th>Time</th>
-        <th>Event</th>
-        <th>Status</th>
-        <th>Txn ref</th>
-        <th>success</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="w : ${recentWebhooks}">
-        <td th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
-        <td th:text="${w.eventCode}">Authorised</td>
-        <td th:text="${w.paymentStatus}">Authorised</td>
-        <td th:text="${w.txnRefNum}">demo-</td>
-        <td th:classappend="${w.eventCode == 'Authorised'} ? 'success-comment-highlight' : _"
-            th:text="${w.success}">true</td>
-      </tr>
-      </tbody>
-    </table>
+      <a class="mb-2 flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+         th:href="@{/}">Back to MyStore</a>
+      <a class="flex w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+         th:href="@{/return/{txnRefNum}(txnRefNum=${txnRefNum})}">Refresh status</a>
+    </div>
   </section>
 
-  <p style="margin-top:1.5rem;">
-    <a th:href="@{/}" class="btn btn-ghost" style="width:auto;display:inline-flex;">← New simulation</a>
-  </p>
+  <section class="mt-6" th:if="${!#lists.isEmpty(recentWebhooks)}">
+    <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Recent webhooks</h3>
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table class="w-full text-xs">
+        <thead>
+        <tr class="bg-slate-50 text-slate-500">
+          <th class="px-3 py-2 text-left font-medium">Time</th>
+          <th class="px-3 py-2 text-left font-medium">Event</th>
+          <th class="px-3 py-2 text-left font-medium">Status</th>
+          <th class="px-3 py-2 text-left font-medium">Txn ref</th>
+          <th class="px-3 py-2 text-left font-medium">success</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="border-t border-slate-200" th:each="w : ${recentWebhooks}">
+          <td class="px-3 py-2" th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
+          <td class="px-3 py-2" th:text="${w.eventCode}">Authorised</td>
+          <td class="px-3 py-2" th:text="${w.paymentStatus}">Authorised</td>
+          <td class="px-3 py-2" th:text="${w.txnRefNum}">demo-</td>
+          <td class="px-3 py-2" th:classappend="${w.eventCode == 'Authorised'} ? ' font-semibold text-green-600' : _"
+              th:text="${w.success}">true</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>
 </body>
 </html>

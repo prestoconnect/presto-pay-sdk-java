@@ -3,74 +3,233 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Presto Pay SDK samples</title>
-  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <title>MyStore</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 </head>
-<body class="page-hub">
-<div class="wrap">
-  <header class="demo-header">
-    <h1>Presto Pay SDK — Spring Boot samples</h1>
-    <p>Two checkout experiences powered by the same <code>PrestoPayClient</code>. Pick one to simulate a payment against staging.</p>
-    <dl class="demo-config">
-      <div class="demo-config-row">
-        <dt>Env</dt>
-        <dd th:text="${prestoEnv}">staging</dd>
-      </div>
-      <div class="demo-config-row">
-        <dt>mid</dt>
-        <dd th:text="${prestoMid}">mid</dd>
-      </div>
-      <div class="demo-config-row">
-        <dt>prestoMrn</dt>
-        <dd th:text="${prestoMrn}">PM…</dd>
-      </div>
-      <div class="demo-config-row">
-        <dt>Notify</dt>
-        <dd><code th:text="${notifyUrl}">notifyUrl</code></dd>
-      </div>
-      <div class="demo-config-row">
-        <dt>Return</dt>
-        <dd><code th:text="${redirectUrl} + '/{txnRefNum}'">return path</code></dd>
-      </div>
-    </dl>
-    <p class="hint hub-callback-note">
-      <strong>Webhooks:</strong> Presto must reach <code th:text="${notifyUrl}">notifyUrl</code> from the internet.
-      With the default <code>http://localhost:8080</code> base, notify events will not be delivered — set
-      <code>APP_PUBLIC_BASE_URL</code> to a public URL (for example an ngrok HTTPS origin) before testing notify.
-    </p>
-  </header>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-900">
+<div class="mx-auto max-w-md px-4 py-8">
 
-  <div class="grid hub-cards">
-    <a class="hub-card hosted" th:href="@{/hosted}">
-      <h2>Hosted payment page</h2>
-      <p>Minimal merchant UI: amount and description only. Presto hosts method selection and card entry on <code>paymentUrl</code>.</p>
-      <span class="hub-cta">Open hosted checkout →</span>
-    </a>
-    <a class="hub-card custom" th:href="@{/self-hosted}">
-      <h2>Self-hosted payment page</h2>
-      <p>Self-hosted checkout: page title, receipt details, and payment method tiles. SDK sends <code>allowedPaymentMethods</code> for the chosen method.</p>
-      <span class="hub-cta">Open self-hosted checkout →</span>
-    </a>
-  </div>
+  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <header class="flex items-center gap-2 bg-slate-900 px-6 py-4 text-lg font-bold text-white">
+      <i class="fa-solid fa-store" aria-hidden="true"></i>
+      <span>MyStore</span>
+    </header>
 
-  <section class="panel" th:if="${!#lists.isEmpty(recentWebhooks)}">
-    <h3>Recent webhooks (shared)</h3>
-    <table class="feed">
-      <thead>
-      <tr><th>Time</th><th>Event</th><th>Status</th><th>Txn ref</th><th>success</th></tr>
-      </thead>
-      <tbody>
-      <tr th:each="w : ${recentWebhooks}">
-        <td th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
-        <td th:text="${w.eventCode}">Authorised</td>
-        <td th:text="${w.paymentStatus}">Authorised</td>
-        <td th:text="${w.txnRefNum}">demo-</td>
-        <td th:classappend="${w.eventCode == 'Authorised'} ? 'success-comment-highlight' : _"
-            th:text="${w.success}">true</td>
-      </tr>
-      </tbody>
-    </table>
+    <div class="p-6">
+      <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" th:if="${paymentError}">
+        <strong>Could not start payment</strong>
+        <p th:text="${message}">Error</p>
+        <p th:if="${signatureError}">
+          Response signature verification failed (<span th:text="${signatureSide}">RESPONSE</span>).
+          Confirm the Presto public key in config matches the environment.
+        </p>
+        <p th:if="${errorCode != null}">
+          <span th:text="${errorCode}">code</span>:
+          <span th:text="${errorMessage}">message</span>
+        </p>
+      </div>
+
+      <form id="checkoutForm" th:object="${checkout}" th:action="@{/checkout}" method="post">
+        <input type="hidden" th:field="*{pageTitle}"/>
+
+        <label class="mb-5 flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <span>
+            <strong class="block text-sm text-slate-900">Show payment methods on checkout</strong>
+            <span class="mt-0.5 block text-xs text-amber-800" id="toggleDesc"
+                  th:text="*{showPaymentMethods} ? 'On: shopper selects here, before paying' : 'Off: shopper selects after redirect, on the Presto payment page'">
+              Off: shopper selects after redirect, on the Presto payment page
+            </span>
+          </span>
+          <span class="relative inline-flex h-6 w-11 shrink-0 items-center">
+            <input type="checkbox" id="showPaymentMethods" th:field="*{showPaymentMethods}" class="peer sr-only"/>
+            <span class="absolute inset-0 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600"></span>
+            <span class="relative h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"
+                  aria-hidden="true"></span>
+          </span>
+        </label>
+
+        <h1 class="text-xl font-bold">Checkout</h1>
+        <p class="mb-4 text-sm text-slate-500" id="checkoutHint"
+           th:text="*{showPaymentMethods} ? 'Enter the amount and description, then choose how you want to pay.' : 'Enter the amount and description. You will choose how to pay on the next page.'">
+          Enter the amount and description. You will choose how to pay on the next page.
+        </p>
+
+        <div class="mb-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="amountInRinggit" class="mb-1 block text-xs font-medium text-slate-500">Amount (MYR)</label>
+            <div class="flex items-center overflow-hidden rounded-lg border border-slate-300 focus-within:ring-2 focus-within:ring-indigo-100">
+              <span class="border-r border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500">RM</span>
+              <input id="amountInRinggit" type="number" step="0.01" min="0.01" th:field="*{amountInRinggit}"
+                     class="w-full border-0 px-3 py-2 text-sm focus:outline-none focus:ring-0"/>
+            </div>
+            <div class="mt-1 text-xs text-red-600" th:if="${#fields.hasErrors('amountInRinggit')}"
+                 th:errors="*{amountInRinggit}"></div>
+          </div>
+          <div>
+            <label for="displayDesc" class="mb-1 block text-xs font-medium text-slate-500">Description</label>
+            <input id="displayDesc" type="text" th:field="*{displayDesc}" maxlength="200"
+                   placeholder="What is this payment for?"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"/>
+            <div class="mt-1 text-xs text-red-600" th:if="${#fields.hasErrors('displayDesc')}"
+                 th:errors="*{displayDesc}"></div>
+          </div>
+        </div>
+
+        <div id="methodSection" class="mt-5 border-t border-slate-200 pt-5"
+             th:classappend="*{showPaymentMethods} ? '' : ' hidden'">
+          <fieldset class="mb-4">
+            <legend class="mb-3 text-sm font-semibold">Choose Payment Method</legend>
+            <div class="mb-2 text-xs text-red-600" th:if="${#fields.hasErrors('selectedPaymentMethod')}"
+                 th:errors="*{selectedPaymentMethod}"></div>
+
+            <div class="mb-3 flex flex-wrap gap-2" id="categoryPills">
+              <button type="button"
+                      class="pill rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-900 data-[active=true]:border-indigo-600 data-[active=true]:bg-indigo-600 data-[active=true]:text-white"
+                      data-category="all" data-active="true">All</button>
+              <button type="button"
+                      class="pill rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-900 data-[active=true]:border-indigo-600 data-[active=true]:bg-indigo-600 data-[active=true]:text-white"
+                      th:each="cat : ${paymentMethodCategories}" th:text="${cat}" th:attr="data-category=${cat}">
+                Cards
+              </button>
+            </div>
+
+            <div class="flex flex-col gap-2.5" id="methodList">
+              <label class="method-row flex cursor-pointer items-center gap-3 rounded-lg border border-slate-300 bg-white p-3 transition-colors hover:border-slate-400 has-[input:checked]:border-indigo-600 has-[input:checked]:bg-indigo-50 has-[input:checked]:ring-1 has-[input:checked]:ring-indigo-600"
+                     th:each="m : ${paymentMethods}" th:attr="data-category=${m.category}">
+                <input type="radio" th:field="*{selectedPaymentMethod}" th:value="${m.gatewayCode}"
+                       class="order-2 ml-auto h-[18px] w-[18px] shrink-0 accent-indigo-600"/>
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-600">
+                  <i aria-hidden="true"
+                     th:class="${m.category == 'Cards'} ? 'fa-solid fa-credit-card' : (${m.category == 'Online banking'} ? 'fa-solid fa-building-columns' : 'fa-solid fa-wallet')"></i>
+                </span>
+                <span class="min-w-0 flex-1 text-sm font-semibold" th:text="${m.displayName}">Card</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="mb-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="receiptName" class="mb-1 block text-xs font-medium text-slate-500">Receipt name (optional)</label>
+              <input id="receiptName" type="text" th:field="*{receiptName}" maxlength="200"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"/>
+            </div>
+            <div>
+              <label for="receiptEmail" class="mb-1 block text-xs font-medium text-slate-500">Receipt email (optional)</label>
+              <input id="receiptEmail" type="email" th:field="*{receiptEmail}" maxlength="320"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"/>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitButton"
+                class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          <span id="submitButtonLabel"
+                th:text="*{showPaymentMethods} ? 'Pay RM ' + ${#numbers.formatDecimal(checkout.amountInRinggit, 1, 'COMMA', 2, 'POINT')} : 'Continue to Payment'">
+            Continue to Payment
+          </span>
+        </button>
+        <p class="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          <span id="checkoutFootnote"
+                th:text="*{showPaymentMethods} ? 'Secure and encrypted. Card details are entered on the Presto secure page next.' : 'Secure and encrypted'">
+            Secure and encrypted
+          </span>
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <section class="mt-6" th:if="${!#lists.isEmpty(recentWebhooks)}">
+    <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Recent webhooks (shared)</h3>
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table class="w-full text-xs">
+        <thead>
+        <tr class="bg-slate-50 text-slate-500">
+          <th class="px-3 py-2 text-left font-medium">Time</th>
+          <th class="px-3 py-2 text-left font-medium">Event</th>
+          <th class="px-3 py-2 text-left font-medium">Status</th>
+          <th class="px-3 py-2 text-left font-medium">Txn ref</th>
+          <th class="px-3 py-2 text-left font-medium">success</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="border-t border-slate-200" th:each="w : ${recentWebhooks}">
+          <td class="px-3 py-2" th:text="${#temporals.format(w.receivedAt, 'HH:mm:ss')}">12:00</td>
+          <td class="px-3 py-2" th:text="${w.eventCode}">Authorised</td>
+          <td class="px-3 py-2" th:text="${w.paymentStatus}">Authorised</td>
+          <td class="px-3 py-2" th:text="${w.txnRefNum}">demo-</td>
+          <td class="px-3 py-2" th:classappend="${w.eventCode == 'Authorised'} ? ' font-semibold text-green-600' : _"
+              th:text="${w.success}">true</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 </div>
+
+<script th:inline="javascript">
+  (function () {
+    var toggle = document.getElementById('showPaymentMethods');
+    var toggleDesc = document.getElementById('toggleDesc');
+    var methodSection = document.getElementById('methodSection');
+    var checkoutHint = document.getElementById('checkoutHint');
+    var submitButtonLabel = document.getElementById('submitButtonLabel');
+    var checkoutFootnote = document.getElementById('checkoutFootnote');
+    var amountInput = document.getElementById('amountInRinggit');
+
+    var HIDDEN_DESC = 'Off: shopper selects after redirect, on the Presto payment page';
+    var SHOWN_DESC = 'On: shopper selects here, before paying';
+    var HIDDEN_HINT = 'Enter the amount and description. You will choose how to pay on the next page.';
+    var SHOWN_HINT = 'Enter the amount and description, then choose how you want to pay.';
+    var HIDDEN_FOOTNOTE = 'Secure and encrypted';
+    var SHOWN_FOOTNOTE = 'Secure and encrypted. Card details are entered on the Presto secure page next.';
+    var HIDDEN_LABEL = 'Continue to Payment';
+
+    function currentAmountText() {
+      var value = parseFloat(amountInput.value);
+      return isNaN(value) ? '0.00' : value.toFixed(2);
+    }
+
+    function applyToggle() {
+      var showMethods = toggle.checked;
+      methodSection.classList.toggle('hidden', !showMethods);
+      toggleDesc.textContent = showMethods ? SHOWN_DESC : HIDDEN_DESC;
+      checkoutHint.textContent = showMethods ? SHOWN_HINT : HIDDEN_HINT;
+      checkoutFootnote.textContent = showMethods ? SHOWN_FOOTNOTE : HIDDEN_FOOTNOTE;
+      submitButtonLabel.textContent = showMethods ? ('Pay RM ' + currentAmountText()) : HIDDEN_LABEL;
+    }
+
+    toggle.addEventListener('change', applyToggle);
+
+    var pills = document.querySelectorAll('#categoryPills .pill');
+    var methodRows = document.querySelectorAll('#methodList .method-row');
+
+    function applyCategory(category) {
+      var i;
+      for (i = 0; i < pills.length; i++) {
+        pills[i].setAttribute('data-active', pills[i].getAttribute('data-category') === category ? 'true' : 'false');
+      }
+      for (i = 0; i < methodRows.length; i++) {
+        var matches = category === 'all' || methodRows[i].getAttribute('data-category') === category;
+        methodRows[i].classList.toggle('hidden', !matches);
+      }
+    }
+
+    var p;
+    for (p = 0; p < pills.length; p++) {
+      pills[p].addEventListener('click', function (event) {
+        applyCategory(event.currentTarget.getAttribute('data-category'));
+      });
+    }
+
+    amountInput.addEventListener('input', function () {
+      if (toggle.checked) {
+        submitButtonLabel.textContent = 'Pay RM ' + currentAmountText();
+      }
+    });
+  })();
+</script>
 </body>
 </html>
