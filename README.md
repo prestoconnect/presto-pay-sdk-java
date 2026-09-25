@@ -170,9 +170,12 @@ Release artifacts (sources + Javadoc): `./mvnw verify -Prelease`.
 
 See [docs/spring-wiring.md](docs/spring-wiring.md) for a minimal `@Configuration` example.
 
-## Sample app
+## Samples
 
-[sample/spring-boot-payment-demo/](sample/spring-boot-payment-demo/) — Spring Boot 2.7 sample (Java 8+): **hosted** and **self-hosted** checkout UIs. See [sample/README.md](sample/README.md).
+- [sample/spring-boot-payment-demo/](sample/spring-boot-payment-demo/) — Spring Boot 2.7 sample (Java 8+): a MyStore-branded checkout page with a toggle between hosted and self-hosted payment method selection.
+- [sample/custom-transport-demo/](sample/custom-transport-demo/) — reference `HttpTransport` implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp.
+
+See [sample/README.md](sample/README.md) for details on both.
 
 ## License
 

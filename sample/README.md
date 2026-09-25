@@ -2,7 +2,8 @@
 
 ## Spring Boot payment demo
 
-[`spring-boot-payment-demo/`](spring-boot-payment-demo/) — two checkout UIs against **Presto staging**.
+[`spring-boot-payment-demo/`](spring-boot-payment-demo/) — a **MyStore**-branded checkout page against
+**Presto staging**, styled with Tailwind CSS (Play CDN) and Font Awesome icons.
 
 ### Staging credentials
 
@@ -27,12 +28,17 @@ prestopay:
 
 Any value can also come from `PRESTOPAY_*` environment variables. If **all** of `PRESTOPAY_MID`, `PRESTOPAY_KEYSTORE_PATH`, `PRESTOPAY_KEYSTORE_PASSWORD`, and `PRESTOPAY_PUBLIC_KEY_PATH` are set, the app uses `PrestoPayClient.fromEnv()` instead of `application.yml`.
 
-### Checkout UIs
+### Checkout UI
 
-| Route | Experience | SDK |
-|-------|------------|-----|
-| [`/hosted`](http://localhost:8080/hosted) | Amount + description → Presto hosted page | `init` without `allowedPaymentMethods` |
-| [`/self-hosted`](http://localhost:8080/self-hosted) | Branded UI + payment method tiles | `init` with `allowedPaymentMethods(...)` |
+One page ([`/`](http://localhost:8080/), `HomeController`) with a **"Show payment methods on checkout"**
+toggle that switches between the two ways to call `init`, both posting to the same `POST /checkout`:
+
+| Toggle | Experience | SDK |
+|--------|------------|-----|
+| Off (default) | Amount + description → Presto hosted page | `init` without `allowedPaymentMethods` |
+| On | Payment method list shown on this page first | `init` with `allowedPaymentMethods(...)` |
+
+`GET /return/{txnRefNum}` shows the payment result (queries `payments().query()` for authoritative status).
 
 ### Source layout
 
@@ -40,10 +46,10 @@ Any value can also come from `PRESTOPAY_*` environment variables. If **all** of 
 com.prestouniverse.pay.sample.demo
 ├── PaymentDemoApplication.java
 ├── config/              AppProperties, PrestoPayProperties, PrestoPayConfiguration
-├── controller/          Hosted / self-hosted / return / webhook
+├── controller/          HomeController (GET / and POST /checkout), ReturnController, WebhookController
 │   ├── handler/         CheckoutExceptionHandler
 │   └── support/         CheckoutViewAttributes, PaymentInitRedirect
-├── model/checkout/      Forms, CheckoutFlow, PaymentMethodCatalog
+├── model/checkout/      CheckoutForm, CheckoutFlow, PaymentMethodCatalog
 ├── service/             WebPayCheckoutService
 │   └── support/         CheckoutAmounts, DemoTxnReferenceGenerator
 └── repository/          PaymentActivityStore
@@ -73,3 +79,11 @@ Each payment `init` sends `notifyUrl` = `{APP_PUBLIC_BASE_URL}/presto/notify`. P
 Use a tunnel or deployed host and set `APP_PUBLIC_BASE_URL` to that origin (HTTPS recommended). The payer `redirectUrl` should use the same base so return links work in the browser.
 
 Each init sets `redirectUrl` to `{base}/return/{merchantTxnRef}`. The `/return/{txnRefNum}` handler **requires** that path segment; bare `/return` shows an error page.
+
+## Custom HttpTransport reference
+
+[`custom-transport-demo/`](custom-transport-demo/) — reference `HttpTransport` implementations backed by
+Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, for integrators who want to reuse an HTTP
+client they already depend on instead of the SDK's default `HttpURLConnection`-based transport. Copy the
+class you need out of this module rather than depending on it. See its own
+[README](custom-transport-demo/README.md) for the `HttpTransport` contract each implementation follows.
