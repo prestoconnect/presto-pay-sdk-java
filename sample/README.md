@@ -1,16 +1,16 @@
 # Samples
 
-## Spring Boot payment demo
+## MyStore
 
-[`spring-boot-payment-demo/`](spring-boot-payment-demo/) — a **MyStore**-branded checkout page against
+[`my-store/`](my-store/) — a **MyStore**-branded checkout page against
 **Presto staging**, styled with Tailwind CSS (Play CDN) and Font Awesome icons.
 
 ### Staging credentials
 
 Use the staging merchant credentials from your Presto onboarding pack. Nothing secret ships with the sample.
 
-1. Copy the `.p12` and `.der` files into [`src/main/resources/keys/`](spring-boot-payment-demo/src/main/resources/keys/) — see [`keys/README.md`](spring-boot-payment-demo/src/main/resources/keys/README.md). They are gitignored.
-2. Create `spring-boot-payment-demo/application-local.yml` (gitignored) with your values:
+1. Copy the `.p12` and `.der` files into [`src/main/resources/keys/`](my-store/src/main/resources/keys/) — see [`keys/README.md`](my-store/src/main/resources/keys/README.md). They are gitignored.
+2. Create `my-store/application-local.yml` (gitignored) with your values:
 
 ```yaml
 prestopay:
@@ -64,7 +64,7 @@ com.prestouniverse.pay.sample.demo
 
 ```bash
 mvn install   # repo root
-cd sample/spring-boot-payment-demo
+cd sample/my-store
 # add keys/*.p12 and keys/*.der
 export APP_PUBLIC_BASE_URL=https://your-ngrok-url   # for webhooks + redirect
 mvn spring-boot:run
@@ -82,8 +82,8 @@ Each init sets `redirectUrl` to `{base}/return/{merchantTxnRef}`. The `/return/{
 
 ## Custom HttpTransport reference
 
-[`custom-transport-demo/`](custom-transport-demo/) — reference `HttpTransport` implementations backed by
+[`custom-transport/`](custom-transport/) — reference `HttpTransport` implementations backed by
 Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, for integrators who want to reuse an HTTP
 client they already depend on instead of the SDK's default `HttpURLConnection`-based transport. Copy the
 class you need out of this module rather than depending on it. See its own
-[README](custom-transport-demo/README.md) for the `HttpTransport` contract each implementation follows.
+[README](custom-transport/README.md) for the `HttpTransport` contract each implementation follows.

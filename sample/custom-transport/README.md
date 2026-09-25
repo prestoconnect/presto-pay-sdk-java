@@ -58,7 +58,7 @@ transport via `PRESTOPAY_TRANSPORT` (`rest-client`, `jdk-http-client`, or `okhtt
 `query` call against `PRESTOPAY_QUERY_TXN_REF_NUM`.
 
 ```bash
-cd sample/custom-transport-demo
+cd sample/custom-transport
 mvn compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt
 
 export PRESTOPAY_ENV=staging

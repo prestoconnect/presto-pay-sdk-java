@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.prestouniverse.pay.sample</groupId>
-  <artifactId>custom-transport-demo</artifactId>
+  <artifactId>custom-transport</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>Presto Pay SDK — custom HttpTransport reference</name>
   <description>

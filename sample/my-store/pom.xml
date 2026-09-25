@@ -12,9 +12,9 @@
   </parent>
 
   <groupId>com.prestouniverse.pay.sample</groupId>
-  <artifactId>spring-boot-payment-demo</artifactId>
+  <artifactId>my-store</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Presto Pay SDK — Spring Boot sample</name>
+  <name>Presto Pay SDK — MyStore sample</name>
   <description>Demo storefront that initiates WebPay with and without allowedPaymentMethods</description>
 
   <properties>

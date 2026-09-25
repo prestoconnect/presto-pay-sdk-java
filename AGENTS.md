@@ -36,7 +36,6 @@ src/main/java/com/prestouniverse/pay/
   internal/                 # NOT semver-stable — JSON codec, RequestPipeline, JDK transport
 src/test/java/              # Contract tests, crypto tests, MockGatewayServer support
 config/checkstyle/          # Checkstyle rules (fail on violation)
-docs/spring-wiring.md       # Optional Spring @Configuration example
 ```
 
 **Module name:** `com.prestouniverse.pay` (JPMS automatic module).
@@ -126,7 +125,7 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 |------|----------------|
 | New payment field | Matching `*Request` / response, `Validation`, contract test JSON |
 | New payment method or status constant | `PaymentMethod` / `PaymentStatus` (etc.), README if integrator-facing |
-| Spring Boot integrator example | `sample/spring-boot-payment-demo/` |
+| Spring Boot integrator example | `sample/my-store/` |
 | HTTP observability / proxy | Implement `HttpTransport`, wire in `PrestoPayClient.Builder` |
 | Webhook replay window | `WebhookVerifier.Builder.maxTimestampAge` |
 | Version string | `src/main/resources/presto-pay-sdk-version.properties`, `SdkVersion` |
@@ -134,7 +133,6 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 ## References
 
 - [README.md](README.md) — integrator quick start, env vars, errors
-- [docs/spring-wiring.md](docs/spring-wiring.md) — Spring Boot wiring
 - [CHANGELOG.md](CHANGELOG.md) — release notes
 
 ## Out of scope unless asked

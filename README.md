@@ -1,7 +1,6 @@
 # Presto Pay SDK
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.prestouniverse/presto-pay-sdk.svg)](https://central.sonatype.com/artifact/com.prestouniverse/presto-pay-sdk)
-[![Javadoc](https://javadoc.io/badge2/com.prestouniverse/presto-pay-sdk/javadoc.svg)](https://javadoc.io/doc/com.prestouniverse/presto-pay-sdk)
 [![CI](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml/badge.svg)](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
@@ -9,7 +8,7 @@ Standalone, framework-agnostic Java library for the **Presto Connect** payment g
 that are easy to get subtly wrong when integrating a signed payment API by hand: typed request/response
 models, RSA request signing, response and webhook signature verification, and PKCS#12 / X.509 key loading.
 
-- **Java 8+** — no required framework; Spring wiring is one optional file, not a dependency
+- **Java 8+** — no required framework or dependency injection container
 - **Zero runtime dependencies** (JUnit is test-only)
 - **Thread-safe** `PrestoPayClient` — build once, share across threads
 
@@ -24,7 +23,6 @@ models, RSA request signing, response and webhook signature verification, and PK
 - [Errors](#errors)
 - [Custom HTTP client](#custom-http-client)
 - [Debugging signatures](#debugging-signatures)
-- [Spring wiring](#spring-wiring)
 - [Samples](#samples)
 - [Contributing](#contributing)
 - [License](#license)
@@ -160,20 +158,16 @@ HttpTransport logging = (request, connectTimeout, readTimeout) -> {
 
 A custom transport must return non-2xx responses rather than throw, must not follow redirects or resend requests, and must throw `PrestoPayTransportException` with `requestNotSent = true` only when the request certainly never left the process. The SDK's retry safety for `init`, `reverse`, and `refund` depends on that flag being accurate.
 
-For full reference implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, see [sample/custom-transport-demo](sample/custom-transport-demo).
+For full reference implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, see [sample/custom-transport](sample/custom-transport).
 
 ## Debugging signatures
 
 Use `Canonicalizer.canonicalizeJson(jsonString)` to reproduce the gateway canonical string from raw JSON. Avoid depending on types under `com.prestouniverse.pay.internal` — they are not semver-stable.
 
-## Spring wiring
-
-See [docs/spring-wiring.md](docs/spring-wiring.md) for a minimal `@Configuration` example.
-
 ## Samples
 
-- [sample/spring-boot-payment-demo/](sample/spring-boot-payment-demo/) — Spring Boot 2.7 sample (Java 8+): a MyStore-branded checkout page with a toggle between hosted and self-hosted payment method selection.
-- [sample/custom-transport-demo/](sample/custom-transport-demo/) — reference `HttpTransport` implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp.
+- [sample/my-store/](sample/my-store/) — Spring Boot 2.7 sample (Java 8+): a MyStore-branded checkout page with a toggle between hosted and self-hosted payment method selection.
+- [sample/custom-transport/](sample/custom-transport/) — reference `HttpTransport` implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp.
 
 See [sample/README.md](sample/README.md) for details on both.
 
