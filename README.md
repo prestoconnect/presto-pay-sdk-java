@@ -94,7 +94,7 @@ For production, prefer the builder with keys from your secret store and `char[]`
 
 `init`, `reverse`, and `refund` are **not** safely retried after the HTTP request may have reached Presto. The default retry policy only retries those operations when `PrestoPayTransportException.requestNotSent()` is true.
 
-If `init` times out or fails ambiguously **after** send, **do not** call `init` again with the same `txnRefNum` (duplicate refs return error `1203`). Reconcile with:
+If `init` times out or fails ambiguously **after** send, `init` is idempotent by `txnRefNum`: calling it again with the same `txnRefNum` returns the existing payment's current status and `paymentRefNum` rather than creating a second record or failing. (An earlier version of this doc claimed a duplicate `txnRefNum` returns gateway error `1203`; staging traffic has since shown that's wrong for a plain resend, and what actually triggers `1203` is unconfirmed.) Retrying is safe, but `query` remains the more direct way to check status without guessing at what a retry will return:
 
 ```java
 PaymentQueryResponse status = client.payments().query(

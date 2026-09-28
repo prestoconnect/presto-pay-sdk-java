@@ -98,7 +98,7 @@ Agents editing crypto or JSON must preserve gateway behavior:
 Documented in README and `PrestoPayClient` Javadoc:
 
 - **`init` / `reverse` / `refund`:** unsafe to retry after the HTTP request may have reached Presto. Default policy retries only when `PrestoPayTransportException.requestNotSent()` is true.
-- Duplicate `txnRefNum` on init → gateway error **`1203`** (`ErrorCode.DUPLICATE_TXN_REF_NUM`). After ambiguous init failure, integrators must **`query`** by `txnRefNum`, not re-init.
+- `init` is idempotent by `txnRefNum`: real staging traffic (via the Go SDK's staging smoke test) confirms a plain resend of `init` with an existing `txnRefNum` returns the existing payment's current status, not an error, so re-init is actually safe. Do **not** assume a duplicate `txnRefNum` returns gateway error `1203` — that claim was wrong and has been removed from README; what (if anything) actually triggers `1203` (`ErrorCode.DUPLICATE_TXN_REF_NUM`) is unconfirmed. `query` by `txnRefNum` remains the more direct way to check status without guessing.
 - **`query`** may retry on transport errors and retryable API failures.
 
 Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent flags requires updating `RetryPolicyContractTest` and README if behavior changes.
