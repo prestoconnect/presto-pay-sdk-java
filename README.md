@@ -60,7 +60,7 @@ PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
     .amount(10_000)
     .currencyCode("MYR")
     .notifyUrl("https://your-app.example/presto/notify")
-    .redirectUrl("https://your-app.example/presto/return")
+    .redirectUrl("https://your-app.example/presto/return/order-123")
     .build());
 
 String paymentUrl = init.paymentUrl();
