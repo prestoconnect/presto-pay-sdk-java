@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-01
+
 ### Removed
 
 - **Breaking:** `NotifyEvent.paymentStatus()`. A webhook reports what happened (`eventCode()`, `success()`), not
@@ -73,5 +75,6 @@ First public release.
 - Lists returned by `PaymentQueryResponse` and `NotifyEvent` are unmodifiable.
 - Constants in `NotifyEventCode`, `PaymentMethod`, `PaymentStatus`, `RefundStatus`, `ReversalStatus`, and `TxnType` are renamed so each name matches its gateway string value (e.g. `PaymentStatus.PENDING_AUTHORISE` → `PaymentStatus.PendingAuthorise`, `TxnType.WEB_PAY` → `TxnType.WebPay`, `PaymentMethod.PM_PG_CARD` → `PaymentMethod.PmPgCard`). Values are unchanged. `ErrorCode` keeps descriptive names because its values are numeric.
 
-[Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/prestoconnect/presto-pay-sdk-java/releases/tag/v0.1.0
