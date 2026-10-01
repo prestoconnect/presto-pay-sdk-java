@@ -29,11 +29,11 @@ Maven:
 <dependency>
   <groupId>com.prestouniverse</groupId>
   <artifactId>presto-pay-sdk</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
-Gradle: `implementation("com.prestouniverse:presto-pay-sdk:0.2.0")`
+Gradle: `implementation("com.prestouniverse:presto-pay-sdk:0.2.1")`
 
 ## Before you start
 

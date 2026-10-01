@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-01
+
+### Changed
+
+- The README is now a getting-started guide: creating your key pair with `keytool` and sending Presto the
+  `.der` public key, how a payment flows, a four-step quick start and a payment status table. Reference
+  material moved to `docs/` (payments and errors, webhooks, production).
+- The Javadoc on `PrestoPayClient`, `PaymentsClient.init` and `PaymentInitRequest` now says `init` is safe to
+  call again with the same `txnRefNum`: Presto returns the existing payment and its current status rather than
+  creating a second one. It previously said not to retry, and that a duplicate `txnRefNum` returns `1203`.
+- The release workflow uses `setup-java`'s `*-env-var` input names.
+
 ## [0.2.0] - 2026-10-01
 
 ### Removed
@@ -75,6 +87,7 @@ First public release.
 - Lists returned by `PaymentQueryResponse` and `NotifyEvent` are unmodifiable.
 - Constants in `NotifyEventCode`, `PaymentMethod`, `PaymentStatus`, `RefundStatus`, `ReversalStatus`, and `TxnType` are renamed so each name matches its gateway string value (e.g. `PaymentStatus.PENDING_AUTHORISE` → `PaymentStatus.PendingAuthorise`, `TxnType.WEB_PAY` → `TxnType.WebPay`, `PaymentMethod.PM_PG_CARD` → `PaymentMethod.PmPgCard`). Values are unchanged. `ErrorCode` keeps descriptive names because its values are numeric.
 
-[Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/prestoconnect/presto-pay-sdk-java/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/prestoconnect/presto-pay-sdk-java/releases/tag/v0.1.0
