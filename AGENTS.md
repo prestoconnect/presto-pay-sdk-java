@@ -79,7 +79,7 @@ Follow existing patterns in `payments/` and `webhooks/`:
 2. **Gateway code lists** use **`public static final String`** holder classes (no Java `enum` for open-ended gateway strings):
    - `PaymentStatus`, `RefundStatus`, `ReversalStatus`, `PaymentMethod`, `TxnType`, `ErrorCode`
    - Response getters return **`String`** for those wire values; integrators compare to constants or handle unknown gateway values as strings.
-3. **`NotifyEventCode`** is a **`String` constant holder** (same pattern as `PaymentStatus`). Use `NotifyEvent.paymentStatus()` after parse; `payments().query()` remains authoritative.
+3. **`NotifyEventCode`** is a **`String` constant holder** (same pattern as `PaymentStatus`). `NotifyEvent` carries no payment status, since a webhook reports what happened rather than the resulting status; handlers call `payments().query()` for it.
 4. **Validation** lives in `payments.Validation` and request `build()` methods; throw `PrestoPayConfigException` for client-side validation failures.
 5. **Errors:** unchecked `PrestoPayException` subclasses — see README error table.
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** `NotifyEvent.paymentStatus()`. A webhook reports what happened (`eventCode()`, `success()`), not
+  the payment's resulting status, and deriving one was guesswork: a `Refunded` or `Reversed` event with
+  `success()` false is a refund or reversal that failed, leaving the payment in its previous status, which the
+  event does not carry. Call `payments().query()` for the current status. This follows the shared wire contract.
+
+### Changed
+
+- The my-store sample queries the payment in its webhook handler and records the returned status; a failed query
+  answers `NotifyAck.resend()` so Presto redelivers the event.
+
 ## [0.1.0] - 2026-09-25
 
 First public release.

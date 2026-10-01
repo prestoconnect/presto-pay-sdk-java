@@ -117,8 +117,7 @@ WebhookVerifier verifier = WebhookVerifier.builder()
     .build();                                 // rejects events whose ts is more than 15 minutes off
 
 NotifyEvent event = verifier.parse(rawRequestBody);
-String suggestedStatus = event.paymentStatus(); // Authorised uses success; others map to PaymentStatus
-// return 200 with NotifyAck.ok()
+// query the payment for its current status, then return 200 with NotifyAck.ok()
 ```
 
 If you already have a `PrestoPayClient`, `client.webhooks().parse(rawBody)` uses the same Presto public key and only accepts events for the client's `merchantId`. Presto signs webhooks for every partner with the same key, so without this check a genuine event for another merchant would verify.
@@ -127,7 +126,7 @@ Both reject a webhook whose signed `ts` is more than 15 minutes from the local c
 
 Reject webhooks that throw `PrestoPaySignatureException` (for example HTTP 401) or `PrestoPayResponseException` (for example HTTP 400) rather than letting them surface as a 500.
 
-`event.paymentStatus()` reflects the notify contract (for **Authorised**, `success` indicates authorisation outcome). Compare `event.eventCode()` to `NotifyEventCode` constants. After any webhook, call `payments().query()` for authoritative payment status.
+A webhook says what happened to a payment (`event.eventCode()`, compared to `NotifyEventCode` constants, and `event.success()` for whether it worked), not the payment's resulting status — a failed `Refunded`, for example, leaves the payment as it was — so `NotifyEvent` carries no status. Call `payments().query()` in the handler for the current status, and answer `NotifyAck.resend()` if that query fails so Presto delivers the event again.
 
 ## Errors
 

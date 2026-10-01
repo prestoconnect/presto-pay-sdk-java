@@ -481,7 +481,6 @@ class PrestoPayClientContractTest {
         assertEquals(NotifyEventCode.Authorised, event.eventCode());
         assertEquals(PaymentStatus.Authorised, event.eventCode());
         assertTrue(event.success());
-        assertEquals(PaymentStatus.Authorised, event.paymentStatus());
         assertEquals(1, event.paymentDetails().size());
     }
 

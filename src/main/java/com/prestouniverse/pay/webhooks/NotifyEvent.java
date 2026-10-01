@@ -4,12 +4,14 @@ import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.SdkAccess;
 import com.prestouniverse.pay.internal.json.JsonObject;
 import com.prestouniverse.pay.payments.PaymentDetail;
-import com.prestouniverse.pay.payments.PaymentStatus;
 
 import java.util.Collections;
 import java.util.List;
 
-/** A verified notify webhook. Use {@code payments().query()} for authoritative payment state. */
+/**
+ * A verified notify webhook. It reports what happened ({@link #eventCode()}, {@link #success()}), not the payment's
+ * resulting status: call {@code payments().query()} for that.
+ */
 public final class NotifyEvent {
 
     private final String eventCode;
@@ -119,18 +121,6 @@ public final class NotifyEvent {
 
     public String ts() {
         return ts;
-    }
-
-    /**
-     * Suggested {@link com.prestouniverse.pay.payments.PaymentStatus} value from this notify event.
-     * For {@link NotifyEventCode#Authorised}, uses {@link #success()}. Call {@code payments().query()} for
-     * authoritative payment status after handling a webhook.
-     */
-    public String paymentStatus() {
-        if (NotifyEventCode.Authorised.equals(eventCode)) {
-            return success() ? PaymentStatus.Authorised : PaymentStatus.Failed;
-        }
-        return eventCode;
     }
 
     @Override

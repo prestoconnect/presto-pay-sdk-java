@@ -2,7 +2,6 @@ package com.prestouniverse.pay.webhooks;
 
 import com.prestouniverse.pay.internal.JsonCodec;
 import com.prestouniverse.pay.internal.json.JsonObject;
-import com.prestouniverse.pay.payments.PaymentStatus;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,24 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NotifyEventTest {
 
     @Test
-    void authorisedSuccessMapsToAuthorisedOrFailed() {
-        assertEquals(PaymentStatus.Authorised, parse(NotifyEventCode.Authorised, true).paymentStatus());
-        assertEquals(PaymentStatus.Failed, parse(NotifyEventCode.Authorised, false).paymentStatus());
-    }
-
-    @Test
-    void knownEventCodesMapToMatchingPaymentStatus() {
-        assertEquals(PaymentStatus.Cancelled, parse(NotifyEventCode.Cancelled, false).paymentStatus());
-        assertEquals(PaymentStatus.Reversed, parse(NotifyEventCode.Reversed, true).paymentStatus());
-        assertEquals(PaymentStatus.Refunded, parse(NotifyEventCode.Refunded, true).paymentStatus());
-        assertEquals(PaymentStatus.Expired, parse(NotifyEventCode.Expired, false).paymentStatus());
+    void failedRefundKeepsEventCodeAndSuccessAsSent() {
+        NotifyEvent event = parse(NotifyEventCode.Refunded, false);
+        assertEquals(NotifyEventCode.Refunded, event.eventCode());
+        assertFalse(event.success());
     }
 
     @Test
     void unknownEventCodeIsPreserved() {
-        NotifyEvent event = parse("FutureEvent", true);
-        assertEquals("FutureEvent", event.eventCode());
-        assertEquals("FutureEvent", event.paymentStatus());
+        assertEquals("FutureEvent", parse("FutureEvent", true).eventCode());
     }
 
     @Test

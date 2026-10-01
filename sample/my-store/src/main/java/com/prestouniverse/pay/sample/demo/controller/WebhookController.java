@@ -1,12 +1,15 @@
 package com.prestouniverse.pay.sample.demo.controller;
 
 import com.prestouniverse.pay.PrestoPayClient;
+import com.prestouniverse.pay.exception.PrestoPayException;
 import com.prestouniverse.pay.exception.PrestoPayResponseException;
 import com.prestouniverse.pay.exception.PrestoPaySignatureException;
+import com.prestouniverse.pay.payments.PaymentQueryResponse;
 import com.prestouniverse.pay.webhooks.NotifyAck;
 import com.prestouniverse.pay.webhooks.NotifyEvent;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore;
 import com.prestouniverse.pay.sample.demo.repository.PaymentActivityStore.WebhookRecord;
+import com.prestouniverse.pay.sample.demo.service.WebPayCheckoutService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,10 +28,13 @@ public class WebhookController {
 
     private final PrestoPayClient prestoPayClient;
     private final PaymentActivityStore activityStore;
+    private final WebPayCheckoutService checkoutService;
 
-    public WebhookController(PrestoPayClient prestoPayClient, PaymentActivityStore activityStore) {
+    public WebhookController(PrestoPayClient prestoPayClient, PaymentActivityStore activityStore,
+            WebPayCheckoutService checkoutService) {
         this.prestoPayClient = prestoPayClient;
         this.activityStore = activityStore;
+        this.checkoutService = checkoutService;
     }
 
     @PostMapping(value = "/presto/notify", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -45,15 +51,23 @@ public class WebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        // event.paymentStatus() other than PaymentStatus.PendingAuthorise means Presto has finalised
-        // this payment. This webhook and the payer's browser redirect to /return/{txnRefNum} are
-        // triggered independently by Presto and can arrive in either order, or at nearly the same
-        // time -- treat the update here as an idempotent upsert keyed by txnRefNum, not a step that
-        // must happen before or after the return page loads.
-        log.info("Webhook verified eventCode={} paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
+        // A webhook says what happened, not the payment's resulting status, so the status comes from query.
+        // If that fails, ask Presto to redeliver rather than acknowledging an event that was never processed.
+        final PaymentQueryResponse payment;
+        try {
+            payment = checkoutService.query(event.txnRefNum());
+        } catch (PrestoPayException ex) {
+            log.warn("Webhook eventRefNum={} not processed, query failed: {}", event.eventRefNum(), ex.getMessage());
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.resend());
+        }
+
+        // This webhook and the payer's browser redirect to /return/{txnRefNum} are triggered independently by
+        // Presto and can arrive in either order, or at nearly the same time -- treat the update here as an
+        // idempotent upsert keyed by txnRefNum, not a step that must happen before or after the return page loads.
+        log.info("Webhook verified eventCode={} queried paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
                         + "amount={} {} eventRefNum={}",
                 event.eventCode(),
-                event.paymentStatus(),
+                payment.paymentStatus(),
                 event.txnRefNum(),
                 event.paymentRefNum(),
                 event.success(),
@@ -64,7 +78,7 @@ public class WebhookController {
         activityStore.appendWebhook(new WebhookRecord(
                 event.txnRefNum(),
                 event.eventCode(),
-                event.paymentStatus(),
+                payment.paymentStatus(),
                 event.success(),
                 event.amount(),
                 event.currencyCode(),
