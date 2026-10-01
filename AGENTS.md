@@ -6,7 +6,7 @@ Instructions for AI coding agents working in this repository. Human integrators 
 
 Standalone **Java 8+** Maven library (`com.prestouniverse:presto-pay-sdk`) for the **Presto Connect** payment gateway: typed `*Request` / response models, RSA request signing, response and webhook verification, PKCS#12 / X.509 key loading. **No runtime dependencies** (JUnit 5 is test-only). **Thread-safe** `PrestoPayClient` — build once, share across threads.
 
-Gateway behavior and wire formats are defined by the implemented client, [README.md](README.md), and contract tests (especially `PrestoPayClientContractTest`). When changing API shapes or signing, read those and match existing request/response types.
+Gateway behavior and wire formats are defined by the implemented client, [README.md](README.md) and [docs/](docs/), and contract tests (especially `PrestoPayClientContractTest`). When changing API shapes or signing, read those and match existing request/response types.
 
 ## Commands
 
@@ -81,7 +81,7 @@ Follow existing patterns in `payments/` and `webhooks/`:
    - Response getters return **`String`** for those wire values; integrators compare to constants or handle unknown gateway values as strings.
 3. **`NotifyEventCode`** is a **`String` constant holder** (same pattern as `PaymentStatus`). `NotifyEvent` carries no payment status, since a webhook reports what happened rather than the resulting status; handlers call `payments().query()` for it.
 4. **Validation** lives in `payments.Validation` and request `build()` methods; throw `PrestoPayConfigException` for client-side validation failures.
-5. **Errors:** unchecked `PrestoPayException` subclasses — see README error table.
+5. **Errors:** unchecked `PrestoPayException` subclasses — see the error table in [docs/payments-and-errors.md](docs/payments-and-errors.md#errors).
 
 When adding a new gateway-known code, add a constant to the appropriate holder class and extend contract tests if behavior is user-visible.
 
@@ -95,13 +95,13 @@ Agents editing crypto or JSON must preserve gateway behavior:
 
 ## Retry and idempotency (do not regress)
 
-Documented in README and `PrestoPayClient` Javadoc:
+Documented in [docs/payments-and-errors.md](docs/payments-and-errors.md) and `PrestoPayClient` Javadoc:
 
 - **`init` / `reverse` / `refund`:** unsafe to retry after the HTTP request may have reached Presto. Default policy retries only when `PrestoPayTransportException.requestNotSent()` is true.
-- `init` is idempotent by `txnRefNum`: real staging traffic (via the Go SDK's staging smoke test) confirms a plain resend of `init` with an existing `txnRefNum` returns the existing payment's current status, not an error, so re-init is actually safe. Do **not** assume a duplicate `txnRefNum` returns gateway error `1203` — that claim was wrong and has been removed from README; what (if anything) actually triggers `1203` (`ErrorCode.DUPLICATE_TXN_REF_NUM`) is unconfirmed. `query` by `txnRefNum` remains the more direct way to check status without guessing.
+- `init` is idempotent by `txnRefNum`: real staging traffic (via the Go SDK's staging smoke test) confirms a plain resend of `init` with an existing `txnRefNum` returns the existing payment's current status, not an error, so re-init is actually safe. Do **not** assume a duplicate `txnRefNum` returns gateway error `1203` — that claim was wrong and has been removed from the docs; what (if anything) actually triggers `1203` (`ErrorCode.DUPLICATE_TXN_REF_NUM`) is unconfirmed. `query` by `txnRefNum` remains the more direct way to check status without guessing.
 - **`query`** may retry on transport errors and retryable API failures.
 
-Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent flags requires updating `RetryPolicyContractTest` and README if behavior changes.
+Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent flags requires updating `RetryPolicyContractTest` and [docs/payments-and-errors.md](docs/payments-and-errors.md) if behavior changes.
 
 ## Testing expectations
 
@@ -124,7 +124,7 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 | Task | Where to look |
 |------|----------------|
 | New payment field | Matching `*Request` / response, `Validation`, contract test JSON |
-| New payment method or status constant | `PaymentMethod` / `PaymentStatus` (etc.), README if integrator-facing |
+| New payment method or status constant | `PaymentMethod` / `PaymentStatus` (etc.), the README status table or `docs/` if integrator-facing |
 | Spring Boot integrator example | `sample/my-store/` |
 | HTTP observability / proxy | Implement `HttpTransport`, wire in `PrestoPayClient.Builder` |
 | Webhook replay window | `WebhookVerifier.Builder.maxTimestampAge` |
@@ -132,7 +132,8 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 
 ## References
 
-- [README.md](README.md) — integrator quick start, env vars, errors
+- [README.md](README.md) — integrator getting started: keys, payment flow, quick start, statuses
+- [docs/](docs/) — payments and errors, webhooks, production configuration and troubleshooting
 - [CHANGELOG.md](CHANGELOG.md) — release notes
 
 ## Out of scope unless asked
