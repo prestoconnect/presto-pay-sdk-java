@@ -1,31 +1,25 @@
-# Presto Pay SDK
+# Presto Pay SDK for Java
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.prestouniverse/presto-pay-sdk.svg)](https://central.sonatype.com/artifact/com.prestouniverse/presto-pay-sdk)
 [![CI](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml/badge.svg)](https://github.com/prestoconnect/presto-pay-sdk-java/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Standalone, framework-agnostic Java library for the **Presto Connect** payment gateway. It handles the parts
-that are easy to get subtly wrong when integrating a signed payment API by hand: typed request/response
-models, RSA request signing, response and webhook signature verification, and PKCS#12 / X.509 key loading.
+Accept payments through the **Presto Connect** payment gateway from any Java application. The SDK signs every
+request, verifies every response and webhook, and gives you typed requests and results, so you don't have to
+handle the gateway's signature scheme yourself.
 
-- **Java 8+** — no required framework or dependency injection container
-- **Zero runtime dependencies** (JUnit is test-only)
-- **Thread-safe** `PrestoPayClient` — build once, share across threads
+- **Java 8+**, no framework required
+- **Zero runtime dependencies**
+- **Thread-safe** `PrestoPayClient`: build one and share it
 
 ## Contents
 
 - [Install](#install)
+- [Before you start](#before-you-start)
+- [How a payment works](#how-a-payment-works)
 - [Quick start](#quick-start)
-- [Merchant identity](#merchant-identity)
-- [Configuration from environment](#configuration-from-environment)
-- [Retries and idempotency](#retries-and-idempotency)
-- [Webhooks](#webhooks)
-- [Errors](#errors)
-- [Custom HTTP client](#custom-http-client)
-- [Debugging signatures](#debugging-signatures)
-- [Samples](#samples)
-- [Contributing](#contributing)
-- [License](#license)
+- [Payment statuses](#payment-statuses)
+- [Next steps](#next-steps)
 
 ## Install
 
@@ -41,139 +35,217 @@ Maven:
 
 Gradle: `implementation("com.prestouniverse:presto-pay-sdk:0.2.0")`
 
+## Before you start
+
+### 1. Create your key pair
+
+You sign every request with your own RSA private key, and Presto verifies it with the matching public key.
+Generate the pair yourself; the private key never leaves your systems. `keytool` ships with the JDK:
+
+```bash
+keytool -genkeypair -alias merchant -keyalg RSA -keysize 2048 -validity 3650 \
+  -dname "CN=Your Company" -storetype PKCS12 -keystore merchant.p12
+keytool -exportcert -rfc -alias merchant -keystore merchant.p12 -file merchant-cert.pem
+```
+
+`merchant.p12` holds your private key; keep it and its password secret, and out of source control. Send
+`merchant-cert.pem` (your public key) to Presto. If they ask for a bare public key instead, extract it with
+`openssl x509 -in merchant-cert.pem -pubkey -noout > merchant-public.pem`.
+
+### 2. Get your details from Presto
+
+| From Presto | What it is | Where it goes |
+|-------------|------------|---------------|
+| Merchant ID (`mid`) | Identifies your merchant account | `PrestoPayClient.builder().merchantId(...)` |
+| Presto merchant reference (`prestoMrn`) | Identifies the shop or outlet; one `mid` can have several | Every request: `merchantRefNum(...)` |
+| Presto certificate (`.der` or `.pem`) | Verifies Presto's responses and webhooks | `PrestoPayClient.builder().prestoPublicKey(...)` |
+
+Staging and production are separate: each has its own `mid`, `prestoMrn` and Presto certificate, and you
+register your public key for each. Never mix them.
+
+## How a payment works
+
+```
+ Your server                      Presto                     Shopper's browser
+     |---- 1. init ------------------>|                              |
+     |<--- paymentUrl ----------------|                              |
+     |---- 2. redirect to paymentUrl ------------------------------->|
+     |                                |<---- 3. shopper pays --------|
+     |                                |---- 4a. redirect to your redirectUrl -->|
+     |<--- 4b. webhook to your notifyUrl                             |
+     |---- 5. query ----------------->|                              |
+```
+
+1. Your server calls `init` with your order's reference and amount. Presto returns a `paymentUrl`.
+2. You redirect the shopper to `paymentUrl`.
+3. The shopper chooses a payment method and pays on Presto's page.
+4. Presto sends the shopper's browser back to your `redirectUrl` **and** POSTs a signed webhook to your
+   `notifyUrl`. These happen independently and can arrive in either order.
+5. On both, you call `query` to get the payment's status from Presto, and update the order.
+
+The identifiers you'll see:
+
+| Name | Who creates it | What it's for |
+|------|----------------|---------------|
+| `txnRefNum` | You | Your reference for the payment, such as an order ID. Unique per payment, at most 50 characters |
+| `paymentRefNum` | Presto | Presto's reference for the payment, returned by `init` |
+| `eventRefNum` | Presto | Identifies one webhook event; stays the same when Presto redelivers it |
+| `reversalRefNum`, `refundRefNum` | You | Your reference for a reversal or a refund |
+
 ## Quick start
 
-```java
-PrestoPayClient client = PrestoPayClient.builder()
-    .environment(Environment.STAGING)
-    .merchantId("YOUR_MID")            // mid, sent on every request and required on webhooks
-    .privateKey(PrestoPayKeys.privateKeyFromPkcs12(
-        Paths.get("/path/to/partner.p12"), passwordChars)) // or pass an alias if the keystore holds several keys
-    .prestoPublicKey(PrestoPayKeys.publicKeyFromX509(Paths.get("/path/to/presto.der")))
-    .build();
+### 1. Create the client
 
-PaymentInitResponse init = client.payments().init(PaymentInitRequest.builder()
-    .merchantRefNum("YOUR_PRESTO_MRN") // prestoMrn, required on every request
-    .txnType(TxnType.WebPay)          // or any gateway string
-    .txnRefNum("order-123")
-    .displayDesc("Order 123")
-    .amount(10_000)
+Build it once at startup and reuse it. Bad keys or a wrong password fail here, not on the first payment.
+
+```java
+import com.prestouniverse.pay.Environment;
+import com.prestouniverse.pay.PrestoPayClient;
+import com.prestouniverse.pay.PrestoPayKeys;
+import java.nio.file.Paths;
+
+PrestoPayClient presto = PrestoPayClient.builder()
+    .environment(Environment.STAGING)
+    .merchantId("YOUR_MID")
+    .privateKey(PrestoPayKeys.privateKeyFromPkcs12(Paths.get("merchant.p12"), keystorePassword))
+    .prestoPublicKey(PrestoPayKeys.publicKeyFromX509(Paths.get("presto.der")))
+    .build();
+```
+
+`keystorePassword` is a `char[]`, for example from your secret store. To configure the client from environment
+variables instead, see [Configuration](docs/production.md#configuration-from-environment).
+
+### 2. Start a payment
+
+```java
+import com.prestouniverse.pay.payments.PaymentInitRequest;
+import com.prestouniverse.pay.payments.PaymentInitResponse;
+import com.prestouniverse.pay.payments.PaymentMethod;
+import com.prestouniverse.pay.payments.TxnType;
+
+PaymentInitResponse payment = presto.payments().init(PaymentInitRequest.builder()
+    .merchantRefNum("YOUR_PRESTO_MRN")
+    .txnType(TxnType.WebPay)
+    .txnRefNum(orderId)
+    .displayDesc("Order " + orderId)
+    .amount(10_000) // minor units: MYR 100.00
     .currencyCode("MYR")
     .notifyUrl("https://your-app.example/presto/notify")
-    .redirectUrl("https://your-app.example/presto/return/order-123")
+    .redirectUrl("https://your-app.example/presto/return/" + orderId)
+    .allowedPaymentMethods(PaymentMethod.Card) // Skip this unless you build your own payment selection page
     .build());
 
-String paymentUrl = init.paymentUrl();
+// Save payment.paymentRefNum() with the order, then send the shopper to Presto.
+response.sendRedirect(payment.paymentUrl());
 ```
 
-## Merchant identity
+`notifyUrl` must be reachable from the internet; on your own machine, use a tunnel such as ngrok.
 
-A client belongs to one merchant: `merchantId` (`mid`) is required on the builder, sent on every request, and `client.webhooks()` rejects events for any other `mid`. `merchantRefNum` (`prestoMrn`) is set per request, so one client can use several `prestoMrn`s under its `mid`; each `*Request.build()` throws `PrestoPayConfigException` if it is missing or blank.
+### 3. Show the result on your return page
 
-To serve several merchants, build one client per `mid` (they can share the same keys) and route each request and webhook to the matching client, for example with a `Map<String, PrestoPayClient>` keyed by `mid`.
-
-## Configuration from environment
+The redirect only tells you the shopper came back, not whether they paid. Ask Presto:
 
 ```java
-PrestoPayClient client = PrestoPayClient.fromEnv();
+import com.prestouniverse.pay.payments.PaymentQueryRequest;
+import com.prestouniverse.pay.payments.PaymentQueryResponse;
+import com.prestouniverse.pay.payments.PaymentStatus;
+
+PaymentQueryResponse result = presto.payments().query(PaymentQueryRequest.builder()
+    .merchantRefNum("YOUR_PRESTO_MRN")
+    .txnRefNum(orderId)
+    .build());
+
+if (PaymentStatus.Authorised.equals(result.paymentStatus())) {
+    // Paid: show the confirmation.
+} else if (PaymentStatus.PendingAuthorise.equals(result.paymentStatus())) {
+    // Not finished yet: show "processing" and check again shortly.
+} else {
+    // Not paid (Failed, Cancelled, Expired, ...): let the shopper try again.
+}
 ```
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `PRESTOPAY_ENV` | One of env or base URL | `staging` or `production` |
-| `PRESTOPAY_BASE_URL` | Alternative to `PRESTOPAY_ENV` | Override gateway base URL |
-| `PRESTOPAY_MID` | Yes | Merchant `mid` for this client |
-| `PRESTOPAY_KEYSTORE_PATH` | Yes | PKCS#12 path |
-| `PRESTOPAY_KEYSTORE_PASSWORD` | Yes | Keystore password |
-| `PRESTOPAY_KEYSTORE_ALIAS` | No | Private key alias; required only if the keystore holds more than one private key |
-| `PRESTOPAY_PUBLIC_KEY_PATH` | Yes | Presto X.509 certificate (DER or PEM) |
+### 4. Handle the webhook
 
-For production, prefer the builder with keys from your secret store and `char[]` passwords instead of environment strings when possible.
-
-## Retries and idempotency
-
-`init`, `reverse`, and `refund` are **not** safely retried after the HTTP request may have reached Presto. The default retry policy only retries those operations when `PrestoPayTransportException.requestNotSent()` is true.
-
-If `init` times out or fails ambiguously **after** send, `init` is idempotent by `txnRefNum`: calling it again with the same `txnRefNum` returns the existing payment's current status and `paymentRefNum` rather than creating a second record or failing. (An earlier version of this doc claimed a duplicate `txnRefNum` returns gateway error `1203`; staging traffic has since shown that's wrong for a plain resend, and what actually triggers `1203` is unconfirmed.) Retrying is safe, but `query` remains the more direct way to check status without guessing at what a retry will return:
+A webhook tells you something happened to a payment (`eventCode`, and `success` for whether it worked), not
+the payment's resulting status, so query for that here too. Verify the **raw** request body, exactly as
+received. This example uses Spring; any framework works the same way.
 
 ```java
-PaymentQueryResponse status = client.payments().query(
-    PaymentQueryRequest.builder()
-        .merchantRefNum("YOUR_PRESTO_MRN")
-        .txnRefNum("order-123")
-        .build());
+import com.prestouniverse.pay.exception.PrestoPayException;
+import com.prestouniverse.pay.exception.PrestoPayResponseException;
+import com.prestouniverse.pay.exception.PrestoPaySignatureException;
+import com.prestouniverse.pay.webhooks.NotifyAck;
+import com.prestouniverse.pay.webhooks.NotifyEvent;
+
+@PostMapping(value = "/presto/notify", consumes = "application/json")
+public ResponseEntity<String> notify(@RequestBody String rawBody) {
+    NotifyEvent event;
+    try {
+        event = presto.webhooks().parse(rawBody);
+    } catch (PrestoPaySignatureException e) {
+        return ResponseEntity.status(401).build(); // forged, for another mid, or too old
+    } catch (PrestoPayResponseException e) {
+        return ResponseEntity.status(400).build(); // malformed body
+    }
+
+    if (!orders.isEventHandled(event.eventRefNum())) {
+        PaymentQueryResponse payment;
+        try {
+            payment = presto.payments().query(PaymentQueryRequest.builder()
+                .merchantRefNum(event.prestoMrn())
+                .paymentRefNum(event.paymentRefNum())
+                .build());
+        } catch (PrestoPayException e) {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.resend());
+        }
+        orders.updateStatus(event.txnRefNum(), payment.paymentStatus(), event.eventRefNum());
+    }
+    return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.ok());
+}
 ```
 
-`query` is read-only and may be retried on transport errors and 5xx responses.
+`NotifyAck.ok()` tells Presto the event is handled. `NotifyAck.resend()` asks Presto to deliver it again (after
+1, 2, 5 and 10 minutes), which you want when your own processing failed. Presto redelivers an event with the
+same `eventRefNum`, so record it once handled and skip it on later deliveries. See
+[Webhooks](docs/webhooks.md) for the details.
 
-## Webhooks
+Update the order the same way from your return page and your webhook: whichever arrives first records the
+status, and the other finds it already done.
 
-Presto POSTs JSON to your `notifyUrl` from its infrastructure — the URL must be **publicly reachable** (not `localhost` unless you tunnel). Acknowledge with HTTP **200** and body `{"resend":false}` before heavy work:
+## Payment statuses
 
-```java
-WebhookVerifier verifier = WebhookVerifier.builder()
-    .prestoPublicKey(prestoPublicKey)
-    .merchantId("YOUR_MID")                   // required; rejects events signed for other merchants
-    .build();                                 // rejects events whose ts is more than 15 minutes off
+`paymentStatus()` returns one of these strings; compare it with the `PaymentStatus` constants.
 
-NotifyEvent event = verifier.parse(rawRequestBody);
-// query the payment for its current status, then return 200 with NotifyAck.ok()
-```
+| Status | Meaning | What to do |
+|--------|---------|------------|
+| `PendingAuthorise` | Created; the shopper hasn't finished paying | Wait. It becomes `Expired` if not paid within 15 minutes of `init` |
+| `Authorised` | Paid | Fulfil the order |
+| `Failed` | The payment attempt failed | Don't fulfil; let the shopper try again with a new `txnRefNum` |
+| `Cancelled` | Cancelled before it was paid, for example by `reverse` | Don't fulfil |
+| `Expired` | Not paid within 15 minutes | Don't fulfil; start a new payment if the shopper returns |
+| `PendingReverse` | A reversal is in progress | Query again later |
+| `Reversed` | The payment was reversed | Treat the order as cancelled |
+| `PendingRefund` | A refund is in progress | Query again later |
+| `PartialRefunded` | Part of the amount was refunded | Update the order's refunded amount |
+| `Refunded` | The full amount was refunded | Treat the order as refunded |
 
-If you already have a `PrestoPayClient`, `client.webhooks().parse(rawBody)` uses the same Presto public key and only accepts events for the client's `merchantId`. Presto signs webhooks for every partner with the same key, so without this check a genuine event for another merchant would verify.
+The gateway can add statuses, so handle an unknown value without failing.
 
-Both reject a webhook whose signed `ts` is more than 15 minutes from the local clock, so a captured webhook cannot be replayed later. Keep the host clock in sync (NTP). Adjust the window with `WebhookVerifier.Builder.maxTimestampAge(...)` or `PrestoPayClient.Builder.webhookMaxTimestampAge(...)`; `WebhookVerifier.Builder.disableTimestampCheck()` turns it off, but then you must deduplicate events yourself (for example by `eventRefNum`).
+## Next steps
 
-Reject webhooks that throw `PrestoPaySignatureException` (for example HTTP 401) or `PrestoPayResponseException` (for example HTTP 400) rather than letting them surface as a 500.
-
-A webhook says what happened to a payment (`event.eventCode()`, compared to `NotifyEventCode` constants, and `event.success()` for whether it worked), not the payment's resulting status — a failed `Refunded`, for example, leaves the payment as it was — so `NotifyEvent` carries no status. Call `payments().query()` in the handler for the current status, and answer `NotifyAck.resend()` if that query fails so Presto delivers the event again.
-
-## Errors
-
-All SDK errors extend `PrestoPayException` (unchecked):
-
-| Type | When |
-|------|------|
-| `PrestoPayApiException` | HTTP 400 system errors (`x-http-error-code` headers) or HTTP 200 with `success: false` |
-| `PrestoPaySignatureException` | Invalid or missing signature on responses/webhooks; webhook `mid` not allowed or timestamp outside the replay window |
-| `PrestoPayResponseException` | Response or webhook body cannot be parsed (malformed JSON, missing required fields, bad formats); see `source()` and `rawBody()`. On `init`/`reverse`/`refund` the operation may have succeeded — reconcile with `query` |
-| `PrestoPayTransportException` | Network, timeout, TLS; check `requestNotSent()` |
-| `PrestoPayConfigException` | Builder validation (including timeouts under 1 ms), bad keys, missing env |
-
-Compare business error codes to constants in `ErrorCode` (e.g. `1005` clock skew — ensure host time is accurate; timestamps are UTC+8).
-
-## Custom HTTP client
-
-Implement `HttpTransport` and pass it to the client builder (for proxies, pooling, or observability). The default uses JDK `HttpURLConnection`; wrap `HttpTransport.jdkDefault()` to decorate it, for example to add logging:
-
-```java
-HttpTransport jdk = HttpTransport.jdkDefault();
-HttpTransport logging = (request, connectTimeout, readTimeout) -> {
-    HttpResponse response = jdk.execute(request, connectTimeout, readTimeout);
-    log.info("{} -> {}", request.url(), response.status());
-    return response;
-};
-```
-
-A custom transport must return non-2xx responses rather than throw, must not follow redirects or resend requests, and must throw `PrestoPayTransportException` with `requestNotSent = true` only when the request certainly never left the process. The SDK's retry safety for `init`, `reverse`, and `refund` depends on that flag being accurate.
-
-For full reference implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp, see [sample/custom-transport](sample/custom-transport).
-
-## Debugging signatures
-
-Use `Canonicalizer.canonicalizeJson(jsonString)` to reproduce the gateway canonical string from raw JSON. Avoid depending on types under `com.prestouniverse.pay.internal` — they are not semver-stable.
-
-## Samples
-
-- [sample/my-store/](sample/my-store/) — Spring Boot 2.7 sample (Java 8+): a MyStore-branded checkout page with a toggle between hosted and self-hosted payment method selection.
-- [sample/custom-transport/](sample/custom-transport/) — reference `HttpTransport` implementations backed by Spring's `RestClient`, the JDK 11+ `HttpClient`, and OkHttp.
-
-See [sample/README.md](sample/README.md) for details on both.
+- [Payments and errors](docs/payments-and-errors.md): look up, reverse and refund payments; handle errors and
+  timeouts safely.
+- [Webhooks](docs/webhooks.md): replies, redelivery, deduplication and the freshness window.
+- [Production](docs/production.md): configuration, several merchants, custom HTTP clients, the go-live
+  checklist and troubleshooting.
+- [Samples](sample/README.md): a runnable Spring Boot checkout against Presto staging
+  ([`my-store`](sample/my-store/)), and reference HTTP transports ([`custom-transport`](sample/custom-transport/)).
 
 ## Contributing
 
-Building, testing, code style, and the release process live in [CONTRIBUTING.md](CONTRIBUTING.md).
+Building, testing, code style and the release process are in [CONTRIBUTING.md](CONTRIBUTING.md). Report
+security issues as described in [SECURITY.md](SECURITY.md), not in a public issue.
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
