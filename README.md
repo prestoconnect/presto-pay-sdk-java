@@ -133,7 +133,7 @@ PaymentInitResponse payment = presto.payments().init(PaymentInitRequest.builder(
     .currencyCode("MYR")
     .notifyUrl("https://your-app.example/presto/notify")
     .redirectUrl("https://your-app.example/presto/return/" + orderId)
-    .allowedPaymentMethods(PaymentMethod.Card) // Skip this unless you build your own payment selection page
+    .allowedPaymentMethods(PaymentMethod.PmPgCard) // Skip this unless you build your own payment selection page
     .build());
 
 // Save payment.paymentRefNum() with the order, then send the shopper to Presto.
