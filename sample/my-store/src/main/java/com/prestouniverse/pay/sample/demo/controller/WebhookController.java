@@ -48,7 +48,7 @@ public class WebhookController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (PrestoPayResponseException ex) {
             log.warn("Webhook rejected: malformed body message={}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.ok());
         }
 
         // A webhook says what happened, not the payment's resulting status, so the status comes from query.

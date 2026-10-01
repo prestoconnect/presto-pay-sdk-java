@@ -44,8 +44,9 @@ serialize it back, the signature won't match. In Spring, take the body as `@Requ
 Servlet API, read `request.getReader()` to the end.
 
 `parse` throws `PrestoPaySignatureException` for a bad signature, another merchant's `mid`, or a stale
-timestamp, and `PrestoPayResponseException` for a malformed body. Answer those with HTTP 401 and HTTP 400, not
-a 500.
+timestamp, and `PrestoPayResponseException` for a malformed body. Answer a `PrestoPaySignatureException` with HTTP
+401. Answer a malformed body with HTTP 200 and `NotifyAck.ok()`, since a redelivery would fail the same way.
+Never let either surface as a 500.
 
 ## Replying
 

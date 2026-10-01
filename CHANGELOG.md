@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The docs and the my-store sample answer a webhook with a malformed body with HTTP 200 and `NotifyAck.ok()`,
+  like the other Presto Pay SDKs, instead of HTTP 400. A redelivery would fail the same way. A webhook that
+  fails signature verification still gets HTTP 401.
+
 ## [0.2.1] - 2026-10-01
 
 ### Changed

@@ -186,7 +186,7 @@ public ResponseEntity<String> notify(@RequestBody String rawBody) {
     } catch (PrestoPaySignatureException e) {
         return ResponseEntity.status(401).build(); // forged, for another mid, or too old
     } catch (PrestoPayResponseException e) {
-        return ResponseEntity.status(400).build(); // malformed body
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.ok()); // malformed body
     }
 
     if (!orders.isEventHandled(event.eventRefNum())) {
