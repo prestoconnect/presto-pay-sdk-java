@@ -43,13 +43,15 @@ You sign every request with your own RSA private key, and Presto verifies it wit
 Generate the pair yourself; the private key never leaves your systems. `keytool` ships with the JDK:
 
 ```bash
-keytool -genkeypair -alias merchant -keyalg RSA -keysize 2048 -validity 3650 \
+keytool -genkeypair -alias merchant -keyalg RSA -keysize 2048 -validity 99999 \
   -dname "CN=Your Company" -storetype PKCS12 -keystore merchant.p12
 keytool -exportcert -alias merchant -keystore merchant.p12 -file merchant.der
 ```
 
 `merchant.p12` holds your private key; keep it and its password secret, and out of source control. Send
 `merchant.der` (your public key, in the DER format Presto requires) to Presto.
+The certificate is valid for 99999 days (until the year 2300), so you won't have to generate a new key pair
+and register it with Presto again.
 
 ### 2. Get your details from Presto
 
