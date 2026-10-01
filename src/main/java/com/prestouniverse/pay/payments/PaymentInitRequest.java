@@ -13,9 +13,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Starts a payment ({@code /v1/ext/payment/init}). Not idempotent: after an ambiguous failure, {@code query} by
- * {@code txnRefNum} instead of re-sending; a duplicate {@code txnRefNum} returns {@link
- * ErrorCode#DUPLICATE_TXN_REF_NUM}.
+ * Starts a payment ({@code /v1/ext/payment/init}). Idempotent by {@code txnRefNum}: sending it again with the
+ * same {@code txnRefNum} returns the existing payment and its current status.
  */
 public final class PaymentInitRequest {
 

@@ -81,7 +81,8 @@ the JDK 11+ `HttpClient` and OkHttp.
 - [ ] Have your return page `query` the payment instead of trusting the redirect.
 - [ ] Have your webhook handler `query` the payment, deduplicate on `eventRefNum` under a unique constraint, and
       reply `NotifyAck.resend()` when your own processing fails.
-- [ ] Handle an unknown outcome after a timeout or server error by querying, as in
+- [ ] After a timeout or server error, call `init` again with the same `txnRefNum`, and query before retrying
+      `reverse` or `refund`, as in
       [Payments and errors](payments-and-errors.md#when-you-dont-know-whether-it-worked).
 - [ ] Keep the server clock in sync with NTP.
 - [ ] Log `errorCode()` and `errorMessage()` from `PrestoPayApiException`, so you can quote them to Presto

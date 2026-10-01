@@ -24,9 +24,9 @@ import java.util.Map;
  * {@code webhooks()} only accepts events for that {@code mid}. Each {@code *Request} sets its own
  * {@code merchantRefNum} ({@code prestoMrn}). To serve several merchants, build one client per {@code mid}.
  *
- * <p>If {@code init} fails with a transport timeout after the request may have been sent, do not
- * retry {@code init} with the same {@code txnRefNum}. Call {@code query} with that {@code txnRefNum}
- * to reconcile state instead.
+ * <p>If {@code init} fails after the request may have been sent, it is safe to call it again with the same
+ * {@code txnRefNum}: Presto returns the existing payment and its current status rather than creating a second
+ * one.
  *
  * @see com.prestouniverse.pay.payments.PaymentsClient
  * @see com.prestouniverse.pay.webhooks.WebhooksClient

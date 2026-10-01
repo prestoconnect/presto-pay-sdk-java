@@ -94,36 +94,33 @@ Compare `errorCode()` with the `ErrorCode` constants, for example
 
 ## When you don't know whether it worked
 
-A timeout, a server error or a garbled response on `init`, `reverse` or `refund` leaves you not knowing
-whether Presto acted on the request. The SDK won't resend these for you, because doing so could reverse or
-refund twice. Instead, ask Presto:
+A timeout, a server error (HTTP 5xx) or a garbled response leaves you not knowing whether Presto acted on your
+request. The client retries automatically only when the request certainly never left your machine; otherwise
+it's up to you.
+
+**`init`: call it again with the same `txnRefNum`.** That's safe. If the first call reached Presto, you get
+the existing payment and its current status back rather than a second payment:
 
 ```java
+PaymentInitResponse payment;
 try {
-    PaymentInitResponse payment = presto.payments().init(request);
-    response.sendRedirect(payment.paymentUrl());
-} catch (PrestoPayTransportException e) {
-    if (e.requestNotSent()) {
-        throw e; // nothing reached Presto, so it's safe to try again
-    }
-    reconcile(orderId); // it may have been created
+    payment = presto.payments().init(request);
+} catch (PrestoPayTransportException | PrestoPayResponseException e) {
+    payment = presto.payments().init(request); // same txnRefNum: returns the payment if it was created
 } catch (PrestoPayApiException e) {
     if (e.httpStatus() < 500) {
         throw e; // Presto refused the request
     }
-    reconcile(orderId); // a server error: it may have been created
-} catch (PrestoPayResponseException e) {
-    reconcile(orderId); // Presto answered, so it may have been created
+    payment = presto.payments().init(request);
 }
 ```
 
-where `reconcile` is your code: it queries by the same `txnRefNum` and carries on from the status it finds. If
-Presto has no such payment, it wasn't created and you can call `init` again. One refusal also calls for a query: `DUPLICATE_TXN_REF_NUM` (`1203`) means a payment
-with that `txnRefNum` exists, but not what state it's in.
+If Presto ever answers `DUPLICATE_TXN_REF_NUM` (`1203`), a payment with that `txnRefNum` exists; `query` it to
+find its state.
 
-For `init`, calling it again with the same `txnRefNum` is also safe: Presto returns the existing payment and
-its current status rather than creating a second one. After `reverse` or `refund`, query by `paymentRefNum` and
-check `reversalStatus()` or `refundStatus()` before trying again.
+**`reverse` and `refund`: check before trying again.** Sending one of these twice could reverse or refund
+twice, so `query` by `paymentRefNum` first, and look at `reversalStatus()` or `refundStatus()`. Try again only
+if the first request didn't take effect.
 
 ## Retries and timeouts
 

@@ -27,8 +27,9 @@ public final class PaymentsClient {
     }
 
     /**
-     * Starts a payment. Retried only if the request certainly was not sent; after any other failure, call
-     * {@link #query} with the same {@code txnRefNum} instead of calling {@code init} again.
+     * Starts a payment. Retried automatically only if the request certainly was not sent. After any other
+     * failure it is safe to call {@code init} again with the same {@code txnRefNum}: Presto returns the existing
+     * payment and its current status rather than creating a second one.
      *
      * @throws com.prestouniverse.pay.exception.PrestoPayApiException if the gateway rejects the request
      * @throws com.prestouniverse.pay.exception.PrestoPayTransportException on network failure
