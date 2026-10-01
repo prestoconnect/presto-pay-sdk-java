@@ -19,7 +19,7 @@
 | `PRESTOPAY_KEYSTORE_PATH` | Yes | Path to your `.p12` keystore |
 | `PRESTOPAY_KEYSTORE_PASSWORD` | Yes | The keystore's password |
 | `PRESTOPAY_KEYSTORE_ALIAS` | No | The key's alias; needed only if the keystore holds more than one private key |
-| `PRESTOPAY_PUBLIC_KEY_PATH` | Yes | Path to Presto's certificate (DER or PEM) |
+| `PRESTOPAY_PUBLIC_KEY_PATH` | Yes | Path to Presto's `.der` certificate |
 
 A missing or empty variable throws `PrestoPayConfigException` naming it. `fromEnv()` uses the default timeouts
 and retries; use the builder to change them.

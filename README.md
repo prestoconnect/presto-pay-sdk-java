@@ -45,12 +45,11 @@ Generate the pair yourself; the private key never leaves your systems. `keytool`
 ```bash
 keytool -genkeypair -alias merchant -keyalg RSA -keysize 2048 -validity 3650 \
   -dname "CN=Your Company" -storetype PKCS12 -keystore merchant.p12
-keytool -exportcert -rfc -alias merchant -keystore merchant.p12 -file merchant-cert.pem
+keytool -exportcert -alias merchant -keystore merchant.p12 -file merchant.der
 ```
 
 `merchant.p12` holds your private key; keep it and its password secret, and out of source control. Send
-`merchant-cert.pem` (your public key) to Presto. If they ask for a bare public key instead, extract it with
-`openssl x509 -in merchant-cert.pem -pubkey -noout > merchant-public.pem`.
+`merchant.der` (your public key, in the DER format Presto requires) to Presto.
 
 ### 2. Get your details from Presto
 
@@ -58,7 +57,7 @@ keytool -exportcert -rfc -alias merchant -keystore merchant.p12 -file merchant-c
 |-------------|------------|---------------|
 | Merchant ID (`mid`) | Identifies your merchant account | `PrestoPayClient.builder().merchantId(...)` |
 | Presto merchant reference (`prestoMrn`) | Identifies the shop or outlet; one `mid` can have several | Every request: `merchantRefNum(...)` |
-| Presto certificate (`.der` or `.pem`) | Verifies Presto's responses and webhooks | `PrestoPayClient.builder().prestoPublicKey(...)` |
+| Presto certificate (`.der`) | Verifies Presto's responses and webhooks; the SDK reads it as is | `PrestoPayClient.builder().prestoPublicKey(...)` |
 
 Staging and production are separate: each has its own `mid`, `prestoMrn` and Presto certificate, and you
 register your public key for each. Never mix them.
