@@ -117,4 +117,20 @@ public class WebPayCheckoutService {
         activityStore.saveCheckout(pending.afterSuccessfulInit(response));
         return response;
     }
+
+    public void applyPaymentStatus(String txnRefNum, String paymentStatus) {
+        if (paymentStatus == null) {
+            return;
+        }
+        switch (activityStore.applyPaymentStatus(txnRefNum, paymentStatus)) {
+            case PAID:
+                log.info("Order txnRefNum={} paid; fulfilling it", txnRefNum);
+                break;
+            case UPDATED:
+                log.info("Order txnRefNum={} is now {}", txnRefNum, paymentStatus);
+                break;
+            default:
+                log.info("Order txnRefNum={} already finalised; {} changes nothing", txnRefNum, paymentStatus);
+        }
+    }
 }

@@ -152,8 +152,8 @@ public final class WebhookVerifier {
         }
 
         /**
-         * Accepts webhooks regardless of their {@code ts}. Only use this if you deduplicate events yourself, for
-         * example by {@code eventRefNum}.
+         * Accepts webhooks regardless of their {@code ts}. Only use this if your order update finalises an order
+         * only once, so a replayed webhook changes nothing.
          */
         public Builder disableTimestampCheck() {
             this.timestampCheckEnabled = false;

@@ -54,7 +54,7 @@ Reply HTTP 200 with a JSON body:
 
 | Body | Meaning | When to send it |
 |------|---------|-----------------|
-| `NotifyAck.ok()` (`{"resend":false}`) | Handled; don't send it again | You've recorded the event, or had already recorded it earlier |
+| `NotifyAck.ok()` (`{"resend":false}`) | Handled; don't send it again | You've updated the order, or it was already in that status |
 | `NotifyAck.resend()` (`{"resend":true}`) | Send it again later | Your own processing failed, for example the `query` or your database |
 
 Presto retries 1, 2, 5 and 10 minutes after the first attempt, so an event is delivered at most five times over
@@ -65,14 +65,25 @@ Reply quickly. Record the event and reply, and do slow work such as emails or fu
 
 ## Handling redeliveries
 
-The same event can arrive more than once, for example after you ask for a resend. Every delivery of an event
-has the same `eventRefNum`, so:
+The same event can arrive more than once, for example after you ask for a resend, and your return page may
+update the same order first. Guard on the order record rather than on the event:
 
-- record `eventRefNum` once you've handled the event, under a unique constraint in your database;
-- skip events you've already recorded, and still reply `NotifyAck.ok()`;
-- record it only after the `query` succeeds, so a failed attempt isn't mistaken for a handled one on redelivery.
+- `query` the payment on every delivery, then apply its status to the order in one conditional update, so
+  that only one caller can finalise it:
 
-Keep recorded `eventRefNum`s for at least as long as the redelivery schedule (about 18 minutes).
+  ```sql
+  UPDATE orders SET status = ? WHERE txn_ref_num = ? AND status = 'PendingAuthorise'
+  ```
+
+- fulfil only when that update changed a row and the new status is `Authorised`, and create the fulfilment
+  job in the same transaction;
+- once an order is finalised, apply only the statuses that can follow it (`PendingRefund`, `PartialRefunded`,
+  `Refunded`, `PendingReverse`, `Reversed`), never fulfil again, and never let an older status overwrite a
+  newer one;
+- reply `NotifyAck.ok()` whether or not anything changed.
+
+A redelivery, a replay, or a webhook that arrives after the return page then finds the order already in that
+status and does nothing.
 
 ## The freshness window
 
@@ -104,8 +115,8 @@ NotifyEvent event = verifier.parse(rawBody);
 ```
 
 It applies the same checks as `presto.webhooks().parse`. `WebhookVerifier.Builder` also has `maxTimestampAge(...)`
-and `disableTimestampCheck()`. Turn the check off only if you deduplicate on `eventRefNum`, since that becomes
-your only protection against replays.
+and `disableTimestampCheck()`. Turn the check off only if your order update is guarded as described in
+[Handling redeliveries](#handling-redeliveries), since that becomes your only protection against replays.
 
 To receive webhooks for several merchants, give each one its own `notifyUrl`, for example
 `/presto/notify/{mid}`, and verify each with that merchant's client or verifier.

@@ -1,14 +1,19 @@
 package com.prestouniverse.pay.sample.demo.repository;
 
 import com.prestouniverse.pay.payments.PaymentInitResponse;
+import com.prestouniverse.pay.payments.PaymentStatus;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
@@ -16,11 +21,62 @@ public class PaymentActivityStore {
 
     private static final int MAX_WEBHOOK_HISTORY = 50;
 
+    private static final Set<String> PAID_AND_STILL_OPEN = Collections.unmodifiableSet(new HashSet<String>(
+            Arrays.asList(PaymentStatus.Authorised, PaymentStatus.PendingReverse, PaymentStatus.PendingRefund,
+                    PaymentStatus.PartialRefunded)));
+    private static final Set<String> AFTER_PAYMENT = Collections.unmodifiableSet(new HashSet<String>(
+            Arrays.asList(PaymentStatus.Authorised, PaymentStatus.PendingReverse, PaymentStatus.PendingRefund,
+                    PaymentStatus.PartialRefunded, PaymentStatus.Reversed, PaymentStatus.Refunded)));
+
+    public enum StatusChange {
+        NONE,
+        UPDATED,
+        PAID
+    }
+
     private final Map<String, CheckoutRecord> checkoutByTxnRef = new ConcurrentHashMap<String, CheckoutRecord>();
+    private final Map<String, String> orderStatusByTxnRef = new HashMap<String, String>();
     private final List<WebhookRecord> webhookHistory = Collections.synchronizedList(new ArrayList<WebhookRecord>());
 
     public void saveCheckout(CheckoutRecord record) {
         checkoutByTxnRef.put(record.getTxnRefNum(), record);
+        if (record.getPaymentStatus() != null) {
+            synchronized (orderStatusByTxnRef) {
+                if (!orderStatusByTxnRef.containsKey(record.getTxnRefNum())) {
+                    orderStatusByTxnRef.put(record.getTxnRefNum(), record.getPaymentStatus());
+                }
+            }
+        }
+    }
+
+    /**
+     * A real store makes this one conditional UPDATE on the orders table, so that only one of the return page and
+     * the webhook finalises the order.
+     */
+    public StatusChange applyPaymentStatus(String txnRefNum, String next) {
+        synchronized (orderStatusByTxnRef) {
+            String current = orderStatusByTxnRef.get(txnRefNum);
+            if (!canChangeStatus(current, next)) {
+                return StatusChange.NONE;
+            }
+            orderStatusByTxnRef.put(txnRefNum, next);
+            boolean paidNow = PaymentStatus.Authorised.equals(next)
+                    && (current == null || PaymentStatus.PendingAuthorise.equals(current));
+            return paidNow ? StatusChange.PAID : StatusChange.UPDATED;
+        }
+    }
+
+    static boolean canChangeStatus(String current, String next) {
+        if (next.equals(current)) {
+            return false;
+        }
+        if (current == null || PaymentStatus.PendingAuthorise.equals(current)) {
+            return true;
+        }
+        if (PAID_AND_STILL_OPEN.contains(current)) {
+            return AFTER_PAYMENT.contains(next);
+        }
+        return false;
     }
 
     public void appendWebhook(WebhookRecord record) {

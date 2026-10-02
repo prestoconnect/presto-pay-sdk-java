@@ -190,26 +190,27 @@ public ResponseEntity<String> notify(@RequestBody String rawBody) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.ok()); // malformed body
     }
 
-    if (!orders.isEventHandled(event.eventRefNum())) {
-        PaymentQueryResponse payment;
-        try {
-            payment = presto.payments().query(PaymentQueryRequest.builder()
-                .merchantRefNum(event.prestoMrn())
-                .paymentRefNum(event.paymentRefNum())
-                .build());
-        } catch (PrestoPayException e) {
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.resend());
-        }
-        orders.updateStatus(event.txnRefNum(), payment.paymentStatus(), event.eventRefNum());
+    PaymentQueryResponse payment;
+    try {
+        payment = presto.payments().query(PaymentQueryRequest.builder()
+            .merchantRefNum(event.prestoMrn())
+            .paymentRefNum(event.paymentRefNum())
+            .build());
+    } catch (PrestoPayException e) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.resend());
     }
+    orders.applyStatus(event.txnRefNum(), payment.paymentStatus());
     return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.ok());
 }
 ```
 
 `NotifyAck.ok()` tells Presto the event is handled. `NotifyAck.resend()` asks Presto to deliver it again (after
-1, 2, 5 and 10 minutes), which you want when your own processing failed. Presto redelivers an event with the
-same `eventRefNum`, so record it once handled and skip it on later deliveries. See
-[Webhooks](docs/webhooks.md) for the details.
+1, 2, 5 and 10 minutes), which you want when your own processing failed.
+
+The same event can arrive more than once, so `applyStatus` checks the order, not the event: it finalises the
+order only if the order hasn't been finalised yet, and fulfils only on the change into `Authorised`. A
+redelivery then finds the order already in that status and changes nothing. See
+[Webhooks](docs/webhooks.md#handling-redeliveries) for the details.
 
 Update the order the same way from your return page and your webhook: whichever arrives first records the
 status, and the other finds it already done.
@@ -239,7 +240,7 @@ The gateway can add statuses, so handle an unknown value without failing.
   code the SDK doesn't list yet.
 - [Payments and errors](docs/payments-and-errors.md): query, reverse and refund payments; handle errors and
   timeouts safely.
-- [Webhooks](docs/webhooks.md): replies, redelivery, deduplication and the freshness window.
+- [Webhooks](docs/webhooks.md): replies, redelivery, guarding the order update and the freshness window.
 - [Production](docs/production.md): configuration, several merchants, custom HTTP clients, the go-live
   checklist and troubleshooting.
 - [Samples](sample/README.md): a runnable Spring Boot checkout against Presto staging

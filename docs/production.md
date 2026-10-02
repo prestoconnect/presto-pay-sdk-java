@@ -79,8 +79,8 @@ the JDK 11+ `HttpClient` and OkHttp.
 - [ ] Load the private key and its password from a secret store, not from source control or the image.
 - [ ] Make `notifyUrl` a public HTTPS URL that Presto can reach.
 - [ ] Have your return page `query` the payment instead of trusting the redirect.
-- [ ] Have your webhook handler `query` the payment, deduplicate on `eventRefNum` under a unique constraint, and
-      reply `NotifyAck.resend()` when your own processing fails.
+- [ ] Have your webhook handler `query` the payment, apply its status with a guarded update that finalises an
+      order only once and fulfils only on the change into `Authorised`, and reply `NotifyAck.resend()` when your own processing fails.
 - [ ] After a timeout or server error, call `init` again with the same `txnRefNum`, and query before retrying
       `reverse` or `refund`, as in
       [Payments and errors](payments-and-errors.md#when-you-dont-know-whether-it-worked).

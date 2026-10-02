@@ -45,12 +45,12 @@ public class ReturnController {
         activityStore.findCheckoutByTxnRef(merchantTxnRef).ifPresent(record -> model.addAttribute("checkout", record));
 
         try {
-            // Any status other than PaymentStatus.PendingAuthorise means Presto has finalised the
-            // payment (Authorised, Failed, Cancelled, Expired, etc.). The payer's browser redirect
-            // here and the /presto/notify webhook are triggered independently by Presto and can
-            // arrive in either order, or at nearly the same time -- this page must not assume the
-            // webhook has (or hasn't) already been processed.
+            // The payer's browser redirect here and the /presto/notify webhook are triggered
+            // independently by Presto and can arrive in either order, or at nearly the same time, so
+            // both apply the queried status through the same guarded update and whichever comes
+            // second changes nothing.
             PaymentQueryResponse queryResult = checkoutService.query(merchantTxnRef);
+            checkoutService.applyPaymentStatus(merchantTxnRef, queryResult.paymentStatus());
             model.addAttribute("query", queryResult);
         } catch (PrestoPaySignatureException ex) {
             log.warn("Query signature verification failed txnRefNum={} side={} message={} canonical={}",

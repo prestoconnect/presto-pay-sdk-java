@@ -57,23 +57,23 @@ public class WebhookController {
         try {
             payment = checkoutService.query(event.txnRefNum());
         } catch (PrestoPayException ex) {
-            log.warn("Webhook eventRefNum={} not processed, query failed: {}", event.eventRefNum(), ex.getMessage());
+            log.warn("Webhook txnRefNum={} not processed, query failed: {}", event.txnRefNum(), ex.getMessage());
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(NotifyAck.resend());
         }
 
-        // This webhook and the payer's browser redirect to /return/{txnRefNum} are triggered independently by
-        // Presto and can arrive in either order, or at nearly the same time -- treat the update here as an
-        // idempotent upsert keyed by txnRefNum, not a step that must happen before or after the return page loads.
         log.info("Webhook verified eventCode={} queried paymentStatus={} txnRefNum={} paymentRefNum={} success={} "
-                        + "amount={} {} eventRefNum={}",
+                        + "amount={} {}",
                 event.eventCode(),
                 payment.paymentStatus(),
                 event.txnRefNum(),
                 event.paymentRefNum(),
                 event.success(),
                 event.amount(),
-                event.currencyCode(),
-                event.eventRefNum());
+                event.currencyCode());
+
+        // Presto redelivers the same event, and the return page may have updated the order first, so the update
+        // is guarded on the order's current status: a repeat finds the order already done and changes nothing.
+        checkoutService.applyPaymentStatus(event.txnRefNum(), payment.paymentStatus());
 
         activityStore.appendWebhook(new WebhookRecord(
                 event.txnRefNum(),
