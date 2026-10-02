@@ -36,6 +36,9 @@ public final class SdkAccess {
         if (current == null) {
             initialize(PaymentsClient.class);
             current = payments;
+            if (current == null) {
+                throw new IllegalStateException("PaymentsClient did not register payments access");
+            }
         }
         return current;
     }
