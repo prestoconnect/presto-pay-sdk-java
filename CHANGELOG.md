@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `docs/payment-methods.md`, linked from the README: every payment method code with its SDK constant,
+  a note that Presto enables payment methods per merchant during onboarding, which methods need a Presto
+  account (the PrestoPay eWallet and Credits, `Card` and the loyalty programmes), which are legacy
+  (`TouchNGo`, `BigLife`), and how to pass a code the SDK doesn't list yet.
+
 ### Changed
 
 - The docs and the my-store sample answer a webhook with a malformed body with HTTP 200 and `NotifyAck.ok()`,

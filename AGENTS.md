@@ -124,7 +124,7 @@ Any change to `RetryPolicy`, `RequestPipeline`, or `PaymentsClient` idempotent f
 | Task | Where to look |
 |------|----------------|
 | New payment field | Matching `*Request` / response, `Validation`, contract test JSON |
-| New payment method or status constant | `PaymentMethod` / `PaymentStatus` (etc.), the README status table or `docs/` if integrator-facing |
+| New payment method or status constant | `PaymentMethod` / `PaymentStatus` (etc.); a new payment method also goes in the table in [docs/payment-methods.md](docs/payment-methods.md), a new status in the README status table |
 | Spring Boot integrator example | `sample/my-store/` |
 | HTTP observability / proxy | Implement `HttpTransport`, wire in `PrestoPayClient.Builder` |
 | Webhook replay window | `WebhookVerifier.Builder.maxTimestampAge` |
